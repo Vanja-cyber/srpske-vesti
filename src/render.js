@@ -1,6 +1,6 @@
 // Генерисање HTML странице дневног прегледа.
-// Подржава 3 приказа: ћирилица (подразумевано), латиница, француски.
-// renderDocument() -> комплетна HTML страница за GitHub Pages.
+// Прикази: ћирилица (подразумевано), латиница, француски.
+// Функције на страници: претрага, аудио (читање), PDF (штампа), дељење, светла/тамна тема.
 
 function esc(s) {
   return String(s ?? "")
@@ -14,17 +14,29 @@ const STRINGS = {
   sr: {
     factsLabel: "Кључне чињенице",
     weatherWord: "Време",
-    greetingFallback: "Добро јутро!",
-    footerAuto: "🤖 Аутоматски направљено",
-    footerLove: "Направљено с љубављу ❤️",
+    greetingFallback: "Добро јутро.",
+    sourcesUsed: "Коришћени извори",
+    analyzed: (n, m) => `Анализирано ${n} чланака из ${m} извора`,
+    footerAuto: "Аутоматски генерисан преглед",
+    searchPh: "Претражи данашње вести…",
+    listen: "🔊 Слушај",
+    stop: "⏹ Заустави",
+    pdf: "🖨 PDF",
+    share: "↗ Подели",
     range: (min, max) => `од ${min}° до ${max}°`
   },
   fr: {
     factsLabel: "Faits clés",
     weatherWord: "Météo",
-    greetingFallback: "Bonjour !",
-    footerAuto: "🤖 Généré automatiquement",
-    footerLove: "Fait avec amour ❤️",
+    greetingFallback: "Bonjour.",
+    sourcesUsed: "Sources utilisées",
+    analyzed: (n, m) => `${n} articles analysés depuis ${m} sources`,
+    footerAuto: "Aperçu généré automatiquement",
+    searchPh: "Rechercher dans l'actualité du jour…",
+    listen: "🔊 Écouter",
+    stop: "⏹ Arrêter",
+    pdf: "🖨 PDF",
+    share: "↗ Partager",
     range: (min, max) => `de ${min}° à ${max}°`
   }
 };
@@ -45,16 +57,8 @@ function formatDate(iso, lang) {
 
 function wmo(code, lang) {
   const c = Number(code);
-  const sr = {
-    clear: "Ведро", mostly: "Претежно ведро", cloud: "Облачно", fog: "Магла",
-    drizzle: "Ситна киша", rain: "Киша", snow: "Снег", showers: "Пљускови",
-    snowShowers: "Снежни пљускови", storm: "Грмљавина", var: "Променљиво"
-  };
-  const fr = {
-    clear: "Dégagé", mostly: "Plutôt dégagé", cloud: "Nuageux", fog: "Brouillard",
-    drizzle: "Bruine", rain: "Pluie", snow: "Neige", showers: "Averses",
-    snowShowers: "Averses de neige", storm: "Orage", var: "Variable"
-  };
+  const sr = { clear: "Ведро", mostly: "Претежно ведро", cloud: "Облачно", fog: "Магла", drizzle: "Ситна киша", rain: "Киша", snow: "Снег", showers: "Пљускови", snowShowers: "Снежни пљускови", storm: "Грмљавина", var: "Променљиво" };
+  const fr = { clear: "Dégagé", mostly: "Plutôt dégagé", cloud: "Nuageux", fog: "Brouillard", drizzle: "Bruine", rain: "Pluie", snow: "Neige", showers: "Averses", snowShowers: "Averses de neige", storm: "Orage", var: "Variable" };
   const t = lang === "fr" ? fr : sr;
   if (c === 0) return { emoji: "☀️", text: t.clear };
   if (c === 1 || c === 2) return { emoji: "🌤️", text: t.mostly };
@@ -91,6 +95,7 @@ function renderItem(item, lang) {
   const facts = (item.facts || []).filter(Boolean);
   return (
     `<article class="vest">` +
+    (item.image ? `<img class="slika" src="${esc(item.image)}" alt="" loading="lazy" onerror="this.style.display='none'">` : "") +
     `<h3>${esc(item.title)}</h3>` +
     (item.summary ? `<p class="rezime">${esc(item.summary)}</p>` : "") +
     (facts.length
@@ -134,89 +139,141 @@ function renderWeather(w, lang) {
   );
 }
 
+function renderUsed(list, lang) {
+  if (!list || !list.length) return "";
+  return (
+    `<section class="sekcija izvori-korisceni">` +
+    `<h2><span class="ikona">📋</span> ${esc(STRINGS[lang].sourcesUsed)}</h2>` +
+    `<div class="izvori">${list.map((s) => `<span class="izvor">${esc(s)}</span>`).join("")}</div>` +
+    `</section>`
+  );
+}
+
 function renderBody(d, lang, ctx) {
   const t = STRINGS[lang];
+  const meta = ctx.analyzedCount ? `<p class="meta-info">${esc(t.analyzed(ctx.analyzedCount, ctx.sourceCount || 0))}</p>` : "";
   return (
     `<header class="zaglavlje">` +
     `<div class="datum">${esc(formatDate(ctx.date, lang))}</div>` +
     `<h1>${esc(d.greeting || t.greetingFallback)}</h1>` +
     (d.intro ? `<p class="uvod">${esc(d.intro)}</p>` : "") +
+    meta +
     `</header>` +
     renderWeather(ctx.weather, lang) +
     (d.sections || []).map((s) => renderSection(s, lang)).join("") +
-    `<footer class="podnozje">` +
-    `<p>${esc(t.footerAuto)}${ctx.generatedAt ? " • " + esc(ctx.generatedAt) : ""}</p>` +
-    `</footer>`
+    renderUsed(ctx.usedSources, lang) +
+    `<footer class="podnozje"><p>${esc(t.footerAuto)}${ctx.generatedAt ? " • " + esc(ctx.generatedAt) : ""}</p></footer>`
   );
 }
 
 const CSS = `
-#app{--bg:#f4f6f8;--card:#fff;--text:#15191e;--muted:#4b5563;--accent:#15508a;--accent-soft:#e9f1f8;--border:#e2e6ea;--alert:#b3261e;--alert-soft:#fdecec;
+#app{--bg:#f5f3ee;--card:#ffffff;--text:#1d2125;--muted:#5b6573;--accent:#9a3328;--accent-2:#1f5f8b;--accent-soft:#efe9df;--border:#e4ddd0;--alert:#b3261e;--alert-soft:#fbeae6;
   background:var(--bg);color:var(--text);min-height:100vh;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   font-size:21px;line-height:1.75;-webkit-text-size-adjust:100%;}
-#app[data-tema="dark"]{--bg:#0f141a;--card:#1a212b;--text:#e9edf2;--muted:#b3bdca;--accent:#5aa9ff;--accent-soft:#16273a;--border:#27313d;--alert:#ff7a70;--alert-soft:#2a1614;}
+#app[data-tema="dark"]{--bg:#1c2230;--card:#262d3d;--text:#eef1f6;--muted:#b3bdca;--accent:#ff9a8a;--accent-2:#8ec5ff;--accent-soft:#2e3647;--border:#39435a;--alert:#ff8175;--alert-soft:#3a2420;}
 #app *{box-sizing:border-box;}
-#app .controls{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;
-  padding:12px 18px;background:var(--bg);border-bottom:1px solid var(--border);}
-#app .ctrl{min-height:46px;min-width:46px;padding:0 16px;font-size:18px;font-weight:600;cursor:pointer;
+#app .controls{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
+  padding:12px 14px;background:var(--bg);border-bottom:1px solid var(--border);}
+#app .ctrl{min-height:46px;min-width:46px;padding:0 15px;font-size:17px;font-weight:600;cursor:pointer;
   border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);}
 #app .ctrl:hover{border-color:var(--accent);}
-#app .sadrzaj{max-width:720px;margin:0 auto;padding:22px 18px 64px;}
+#app .searchbar{max-width:720px;margin:12px auto 0;padding:0 18px;}
+#app .search{width:100%;min-height:48px;padding:0 18px;font-size:18px;border:1px solid var(--border);border-radius:14px;background:var(--card);color:var(--text);}
+#app .sadrzaj{max-width:720px;margin:0 auto;padding:18px 18px 64px;}
 #app .sadrzaj[hidden]{display:none;}
 #app .zaglavlje{margin:6px 0 22px;}
 #app .datum{color:var(--muted);font-size:18px;}
-#app .zaglavlje h1{font-size:33px;line-height:1.25;margin:6px 0 12px;}
+#app .zaglavlje h1{font-size:33px;line-height:1.2;margin:6px 0 12px;letter-spacing:-.01em;}
 #app .uvod{font-size:22px;line-height:1.8;background:var(--accent-soft);padding:16px 18px;border-radius:14px;border:1px solid var(--border);margin:0;}
+#app .meta-info{color:var(--muted);font-size:16px;margin:12px 0 0;}
 #app .sekcija{margin:30px 0;}
-#app .sekcija h2{font-size:26px;display:flex;align-items:center;gap:10px;padding-bottom:8px;margin:0 0 8px;border-bottom:2px solid var(--accent);}
+#app .sekcija h2{font-size:26px;display:flex;align-items:center;gap:10px;padding-bottom:8px;margin:0 0 10px;border-bottom:3px solid var(--accent);}
 #app .ikona{font-size:26px;}
-#app .vest{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 22px 18px;margin:18px 0;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-#app .vest h3{font-size:24px;line-height:1.4;margin:0 0 10px;}
-#app .rezime{margin:0 0 16px;font-size:21px;line-height:1.85;}
+#app .vest{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin:18px 0;box-shadow:0 1px 3px rgba(40,30,10,.05);overflow:hidden;}
+#app .slika{width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin:0 0 14px;display:block;background:var(--accent-soft);}
+#app .vest h3{font-size:23px;line-height:1.4;margin:0 0 10px;}
+#app .rezime{margin:0 0 14px;font-size:21px;line-height:1.8;}
 #app .cinjenice{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin:0 0 14px;}
 #app .oznaka{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 #app .cinjenice ul{margin:4px 0 0;padding-left:22px;}
-#app .cinjenice li{margin:7px 0;}
+#app .cinjenice li{margin:6px 0;}
 #app .izvori{display:flex;flex-wrap:wrap;gap:8px;}
-#app .izvor{display:inline-block;font-size:16px;font-weight:600;text-decoration:none;color:var(--accent);
+#app .izvor{display:inline-block;font-size:16px;font-weight:600;text-decoration:none;color:var(--accent-2);
   background:var(--accent-soft);border:1px solid var(--border);border-radius:999px;padding:7px 14px;min-height:38px;}
-#app a.izvor:hover{border-color:var(--accent);text-decoration:underline;}
-#app .vreme-karta{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:16px;padding:16px 18px;}
-#app .vreme .temp{font-size:34px;font-weight:700;white-space:nowrap;}
+#app a.izvor:hover{border-color:var(--accent-2);text-decoration:underline;}
+#app .vreme-karta{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px 20px;}
+#app .vreme .temp{font-size:36px;font-weight:700;white-space:nowrap;}
 #app .vreme-opis{color:var(--muted);font-size:19px;}
 #app .sekcija.hitno h2{border-color:var(--alert);color:var(--alert);}
 #app .sekcija.hitno .vest{border-color:var(--alert);background:var(--alert-soft);}
-#app .podnozje{margin-top:40px;text-align:center;color:var(--muted);font-size:16px;border-top:1px solid var(--border);padding-top:18px;}
-#app .srce{margin-top:4px;}
+#app .izvori-korisceni .izvor{color:var(--text);}
+#app .podnozje{margin-top:44px;text-align:center;color:var(--muted);font-size:16px;border-top:1px solid var(--border);padding-top:18px;}
+@media print{#app .controls,#app .searchbar{display:none!important;}#app .vest{break-inside:avoid;border-color:#ccc;}#app{--bg:#fff;}}
 `;
 
 const SCRIPT = `
 (function(){
   var M={"а":"a","б":"b","в":"v","г":"g","д":"d","ђ":"đ","е":"e","ж":"ž","з":"z","и":"i","ј":"j","к":"k","л":"l","љ":"lj","м":"m","н":"n","њ":"nj","о":"o","п":"p","р":"r","с":"s","т":"t","ћ":"ć","у":"u","ф":"f","х":"h","ц":"c","ч":"č","џ":"dž","ш":"š","А":"A","Б":"B","В":"V","Г":"G","Д":"D","Ђ":"Đ","Е":"E","Ж":"Ž","З":"Z","И":"I","Ј":"J","К":"K","Л":"L","Љ":"Lj","М":"M","Н":"N","Њ":"Nj","О":"O","П":"P","Р":"R","С":"S","Т":"T","Ћ":"Ć","У":"U","Ф":"F","Х":"H","Ц":"C","Ч":"Č","Џ":"Dž","Ш":"Š"};
   function toLat(s){var o="";for(var i=0;i<s.length;i++){var c=s[i];o+=(M[c]!==undefined?M[c]:c);}return o;}
-  var app=document.getElementById("app");
-  var sr=document.getElementById("sadrzaj-sr");
-  var fr=document.getElementById("sadrzaj-fr");
-  var btnP=document.getElementById("btnP");
-  var btnJ=document.getElementById("btnJ");
-  var btnT=document.getElementById("btnT");
-  function walk(node,fn){ if(node.nodeType===3){fn(node);} else { for(var i=0;i<node.childNodes.length;i++){ walk(node.childNodes[i],fn);} } }
+  function $(id){return document.getElementById(id);}
+  var app=$("app"),sr=$("sadrzaj-sr"),fr=$("sadrzaj-fr");
+  var btnP=$("btnP"),btnJ=$("btnJ"),btnT=$("btnT"),btnA=$("btnA"),btnPDF=$("btnPDF"),btnShare=$("btnShare"),pret=$("pretraga");
+  function walk(node,f){ if(node.nodeType===3){f(node);} else { for(var i=0;i<node.childNodes.length;i++){ walk(node.childNodes[i],f);} } }
   function toLatin(){ walk(sr,function(n){ if(n.__cyr===undefined)n.__cyr=n.nodeValue; n.nodeValue=toLat(n.__cyr); }); }
   function toCyr(){ walk(sr,function(n){ if(n.__cyr!==undefined)n.nodeValue=n.__cyr; }); }
   var pismo=localStorage.getItem("pismo")||app.getAttribute("data-pismo")||"cyrillic";
   var jezik=localStorage.getItem("jezik")||"sr";
+  function vis(){ return (jezik==="fr"&&fr)?fr:sr; }
+  function labels(){
+    var l=(jezik==="fr")?"fr":"sr";
+    [btnA,btnPDF,btnShare].forEach(function(b){ if(b){var v=b.getAttribute("data-"+l); if(v)b.textContent=v;} });
+    if(pret){ var ph=pret.getAttribute("data-"+l); if(ph)pret.setAttribute("placeholder",ph); }
+  }
   function applyPismo(){ if(pismo==="latin"){toLatin();if(btnP)btnP.textContent="Ћирилица";}else{toCyr();if(btnP)btnP.textContent="Latinica";} localStorage.setItem("pismo",pismo); }
   function applyJezik(){
-    if(jezik==="fr" && fr){ sr.hidden=true; fr.hidden=false; if(btnP)btnP.style.display="none"; if(btnJ)btnJ.textContent="Српски"; }
+    if(jezik==="fr"&&fr){ sr.hidden=true; fr.hidden=false; if(btnP)btnP.style.display="none"; if(btnJ)btnJ.textContent="Српски"; }
     else { jezik="sr"; sr.hidden=false; if(fr)fr.hidden=true; if(btnP)btnP.style.display=""; if(btnJ)btnJ.textContent="Français"; }
-    localStorage.setItem("jezik",jezik);
+    localStorage.setItem("jezik",jezik); labels(); doSearch();
   }
   if(btnP)btnP.addEventListener("click",function(){ pismo=(pismo==="latin")?"cyrillic":"latin"; applyPismo(); });
   if(btnJ)btnJ.addEventListener("click",function(){ jezik=(jezik==="fr")?"sr":"fr"; applyJezik(); });
-  var tema=localStorage.getItem("tema")|| ((window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light");
+  var tema=localStorage.getItem("tema")||"light";
   function applyTema(){ app.setAttribute("data-tema",tema); if(btnT)btnT.textContent=(tema==="dark")?"☀️":"🌙"; localStorage.setItem("tema",tema); }
   if(btnT)btnT.addEventListener("click",function(){ tema=(tema==="dark")?"light":"dark"; applyTema(); });
+  // Аудио (читање наглас)
+  var speaking=false;
+  function stopAudio(){ if(window.speechSynthesis)window.speechSynthesis.cancel(); speaking=false; labels(); }
+  if(btnA)btnA.addEventListener("click",function(){
+    if(!("speechSynthesis" in window)){ return; }
+    if(speaking){ stopAudio(); return; }
+    var m=vis(); var text=m?m.innerText:""; if(!text)return;
+    var u=new SpeechSynthesisUtterance(text);
+    u.lang=(jezik==="fr")?"fr-FR":"sr-RS"; u.rate=.95;
+    u.onend=stopAudio; u.onerror=stopAudio;
+    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); speaking=true;
+    btnA.textContent=(jezik==="fr")?"⏹ Arrêter":"⏹ Заустави";
+  });
+  if(btnPDF)btnPDF.addEventListener("click",function(){ window.print(); });
+  if(btnShare)btnShare.addEventListener("click",function(){
+    var url=location.href, title=document.title;
+    if(navigator.share){ navigator.share({title:title,url:url}).catch(function(){}); }
+    else if(navigator.clipboard){ navigator.clipboard.writeText(url); var o=btnShare.textContent; btnShare.textContent="✓"; setTimeout(function(){labels();},1200); }
+  });
+  // Претрага
+  function doSearch(){
+    if(!pret)return; var q=(pret.value||"").toLowerCase().trim(); var m=vis(); if(!m)return;
+    var vesti=m.querySelectorAll(".vest");
+    for(var i=0;i<vesti.length;i++){ vesti[i].style.display=(!q||vesti[i].textContent.toLowerCase().indexOf(q)>=0)?"":"none"; }
+    var secs=m.querySelectorAll(".sekcija");
+    for(var j=0;j<secs.length;j++){ var s=secs[j];
+      if(s.classList.contains("izvori-korisceni")||s.classList.contains("vreme")){ s.style.display=q?"none":""; continue; }
+      var inSec=s.querySelectorAll(".vest"); if(inSec.length===0){ continue; }
+      var any=false; for(var k=0;k<inSec.length;k++){ if(inSec[k].style.display!=="none"){any=true;break;} }
+      s.style.display=any?"":"none";
+    }
+  }
+  if(pret)pret.addEventListener("input",doSearch);
   applyTema(); applyPismo(); applyJezik();
 })();
 `;
@@ -224,7 +281,14 @@ const SCRIPT = `
 export function renderFragment(digest, opts = {}) {
   const script = opts.defaultScript === "latin" ? "latin" : "cyrillic";
   const hasFr = !!(digest.fr && (digest.fr.sections || []).length);
-  const ctx = { date: digest.date, weather: digest.weather, generatedAt: opts.generatedAt };
+  const ctx = {
+    date: digest.date,
+    weather: digest.weather,
+    generatedAt: opts.generatedAt,
+    usedSources: digest.usedSources,
+    analyzedCount: digest.analyzedCount,
+    sourceCount: digest.sourceCount
+  };
   const srBody = renderBody(digest, "sr", ctx);
   const frBody = hasFr ? renderBody(digest.fr, "fr", ctx) : "";
   return (
@@ -233,8 +297,12 @@ export function renderFragment(digest, opts = {}) {
     `<div class="controls">` +
     `<button id="btnP" class="ctrl" aria-label="Промени писмо">Latinica</button>` +
     (hasFr ? `<button id="btnJ" class="ctrl" aria-label="Changer de langue">Français</button>` : "") +
+    `<button id="btnA" class="ctrl" data-sr="🔊 Слушај" data-fr="🔊 Écouter" aria-label="Слушај">🔊 Слушај</button>` +
+    `<button id="btnPDF" class="ctrl" data-sr="🖨 PDF" data-fr="🖨 PDF" aria-label="PDF">🖨 PDF</button>` +
+    `<button id="btnShare" class="ctrl" data-sr="↗ Подели" data-fr="↗ Partager" aria-label="Подели">↗ Подели</button>` +
     `<button id="btnT" class="ctrl" aria-label="Промени тему">🌙</button>` +
     `</div>` +
+    `<div class="searchbar"><input id="pretraga" class="search" type="search" data-sr="Претражи данашње вести…" data-fr="Rechercher dans l'actualité du jour…" placeholder="Претражи данашње вести…" aria-label="Претрага"></div>` +
     `<main id="sadrzaj-sr" class="sadrzaj">${srBody}</main>` +
     (hasFr ? `<main id="sadrzaj-fr" class="sadrzaj" hidden>${frBody}</main>` : "") +
     `</div>` +
@@ -266,11 +334,11 @@ export function renderArchive(history) {
   return (
     `<!doctype html>\n<html lang="sr"><head><meta charset="utf-8">` +
     `<meta name="viewport" content="width=device-width, initial-scale=1"><title>Архива прегледа</title>` +
-    `<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f4f6f8;color:#15191e;font-size:19px}` +
+    `<style>body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f5f3ee;color:#1d2125;font-size:19px}` +
     `.w{max-width:720px;margin:0 auto;padding:24px 18px}h1{font-size:28px}` +
-    `.red{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;text-decoration:none;color:inherit;background:#fff;border:1px solid #e2e6ea;border-radius:14px;padding:14px 16px;margin:10px 0}` +
-    `.red:hover{border-color:#15508a}.d{font-weight:700}.g{color:#5a6472;flex:1}.b{color:#15508a;font-weight:600}` +
-    `a.nazad{color:#15508a}</style></head><body><div class="w">` +
+    `.red{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:baseline;text-decoration:none;color:inherit;background:#fff;border:1px solid #e4ddd0;border-radius:14px;padding:14px 16px;margin:10px 0}` +
+    `.red:hover{border-color:#9a3328}.d{font-weight:700}.g{color:#5b6573;flex:1}.b{color:#9a3328;font-weight:600}` +
+    `a.nazad{color:#1f5f8b}</style></head><body><div class="w">` +
     `<p><a class="nazad" href="index.html">← Данашњи преглед</a></p>` +
     `<h1>📚 Архива прегледа</h1>` +
     (items || `<p>Још нема сачуваних прегледа.</p>`) +

@@ -1,19 +1,35 @@
 // Слање WhatsApp поруке са линком ка дневном прегледу.
 // Два бесплатна провајдера: "callmebot" (брзо за тест) и "meta" (WhatsApp Cloud API).
 
-function buildText(link) {
-  return (
-    "Добро јутро! ☀️\n" +
-    "Ваш дневни преглед вести из Србије је спреман.\n\n" +
-    "📰 Кликните овде да прочитате:\n" +
-    link
-  );
+function formatDateShort(iso) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso || "");
+  return m ? `${m[3]}.${m[2]}.${m[1]}.` : String(iso || "");
+}
+
+function topHeadlines(d, n) {
+  const secs = d.sections || [];
+  const glavne = secs.find((s) => s.id === "glavne-vesti") || secs[0];
+  const out = [];
+  if (glavne) for (const it of glavne.items || []) { if (out.length >= n) break; if (it.title) out.push(it.title); }
+  return out;
+}
+
+// Кратка WhatsApp порука: датум, главни наслови, број чланака и линк на пуни извештај.
+function buildText(link, digest) {
+  const d = digest || {};
+  const lines = [`📰 Дневни преглед вести — ${formatDateShort(d.date)}`, ""];
+  const top = topHeadlines(d, 3);
+  for (const h of top) lines.push("• " + h);
+  if (top.length) lines.push("");
+  if (d.analyzedCount) lines.push(`Анализирано ${d.analyzedCount} чланака из ${d.sourceCount || 0} извора.`, "");
+  lines.push("👉 Цео извештај:", link);
+  return lines.join("\n");
 }
 
 export async function notify(link, opts = {}) {
   const provider = (opts.provider || process.env.WHATSAPP_PROVIDER || "none").toLowerCase();
-  const text = buildText(link);
-  if (provider === "none") return { provider, skipped: true, reason: "провајдер није подешен" };
+  const text = buildText(link, opts.digest);
+  if (provider === "none") return { provider, skipped: true, reason: "провајдер није подешен", preview: text };
   if (provider === "callmebot") return sendCallMeBot(text);
   if (provider === "meta") return sendMeta(link, text);
   return { provider, skipped: true, reason: "непознат провајдер" };

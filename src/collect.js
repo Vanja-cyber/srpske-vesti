@@ -2,7 +2,14 @@ import Parser from "rss-parser";
 
 const parser = new Parser({
   timeout: 15000,
-  headers: { "User-Agent": "srpske-vesti/0.1 (+daily news digest)" }
+  headers: { "User-Agent": "srpske-vesti/0.1 (+daily news digest)" },
+  customFields: {
+    item: [
+      ["media:content", "mediaContent", { keepArray: true }],
+      ["media:thumbnail", "mediaThumb"],
+      ["content:encoded", "contentEncoded"]
+    ]
+  }
 });
 
 // Неки српски феедови имају неисправан XML (голи „&“, BOM…). Поправљамо најчешће.
@@ -28,6 +35,24 @@ export async function fetchFeed(url) {
   }
 }
 
+// Извлачи слику из RSS ставке (enclosure / media / <img> у садржају).
+function imageOf(it) {
+  const enc = it.enclosure;
+  if (enc && enc.url && (/^image\//.test(enc.type || "") || /\.(jpe?g|png|webp|gif)(\?|$)/i.test(enc.url))) return enc.url;
+  if (it.mediaThumb && it.mediaThumb.$ && it.mediaThumb.$.url) return it.mediaThumb.$.url;
+  const mc = it.mediaContent;
+  if (Array.isArray(mc)) {
+    const hit = mc.find((m) => m && m.$ && m.$.url && /image|jpg|jpeg|png|webp/i.test(m.$.medium || m.$.type || m.$.url));
+    if (hit) return hit.$.url;
+  } else if (mc && mc.$ && mc.$.url) {
+    return mc.$.url;
+  }
+  const html = it.contentEncoded || it.content || it["content:encoded"] || "";
+  const m = /<img[^>]+src=["']([^"']+)["']/i.exec(html);
+  if (m) return m[1];
+  return "";
+}
+
 // Google News у наслову често има облик „Наслов - Извор“. Извлачимо извор.
 function sourceFromTitle(title, fallback) {
   const m = /^(.*) - ([^-]+)$/.exec(String(title || "").trim());
@@ -41,9 +66,7 @@ export async function collect(sources, hours = 24) {
   const articles = [];
   const errors = [];
 
-  const settled = await Promise.allSettled(
-    sources.map(async (s) => ({ s, feed: await fetchFeed(s.url) }))
-  );
+  const settled = await Promise.allSettled(sources.map(async (s) => ({ s, feed: await fetchFeed(s.url) })));
 
   for (let i = 0; i < settled.length; i++) {
     const s = sources[i];
@@ -71,6 +94,7 @@ export async function collect(sources, hours = 24) {
         source,
         category: s.category || "glavne",
         date: raw,
+        image: isGN ? "" : imageOf(it),
         snippet: (it.contentSnippet || it.summary || "").replace(/\s+/g, " ").slice(0, 400).trim()
       });
     }

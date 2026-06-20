@@ -63,13 +63,23 @@ async function main() {
       ultra,
       date
     });
+    // Слике из RSS-а — повежи их са вестима преко линка.
+    const imgByLink = new Map();
+    for (const a of deduped) {
+      if (!a.image) continue;
+      for (const l of a.links || [a.link]) if (l && !imgByLink.has(l)) imgByLink.set(l, a.image);
+    }
+    attachImages(digest.sections, imgByLink);
+    digest.usedSources = usedSourcesOf(digest);
+    digest.analyzedCount = meta.collected;
+    digest.sourceCount = sources.length;
     if (settings.weather && settings.weather.enabled) {
       const w = await getWeather(settings.weather.lat, settings.weather.lon);
       if (w) digest.weather = { city: settings.weather.city || "Београд", ...w };
     }
     // Француски превод (опционо; ако не успе, дугме „Français“ се не приказује).
     const fr = await translateToFrench(digest, { apiKey: process.env.ANTHROPIC_API_KEY, model: settings.model || "claude-sonnet-4-6" });
-    if (fr) digest.fr = fr;
+    if (fr) { copyImages(digest.sections, fr.sections); digest.fr = fr; }
   }
 
   const generatedAt = nowSr();
@@ -96,7 +106,7 @@ async function main() {
   if (!NOSEND) {
     const base = (process.env.SITE_BASE_URL || settings.siteBaseUrl || "").replace(/\/+$/, "");
     const link = base ? `${base}/` : "(SITE_BASE_URL није подешен)";
-    sendResult = await notify(link, { provider: settings.whatsapp && settings.whatsapp.provider });
+    sendResult = await notify(link, { provider: settings.whatsapp && settings.whatsapp.provider, digest });
   }
 
   // Дневник
@@ -114,9 +124,33 @@ async function main() {
   if (!NOSEND) console.log("  WhatsApp:", JSON.stringify(sendResult));
 }
 
+// Повезује слике (по линку) са вестима које је модел вратио.
+function attachImages(sections, map) {
+  for (const s of sections || []) for (const it of s.items || []) {
+    if (it.image) continue;
+    for (const l of it.links || []) { if (map.has(l)) { it.image = map.get(l); break; } }
+  }
+}
+// Скуп свих извора стварно коришћених у данашњем прегледу.
+function usedSourcesOf(digest) {
+  const set = new Set();
+  for (const s of digest.sections || []) for (const it of s.items || []) for (const src of it.sources || []) if (src) set.add(src);
+  return [...set].sort((a, b) => a.localeCompare(b, "sr"));
+}
+// Копира слике у француску структуру (исти редослед секција/вести).
+function copyImages(srcSections, dstSections) {
+  (srcSections || []).forEach((s, i) => (s.items || []).forEach((it, j) => {
+    const d = dstSections && dstSections[i] && dstSections[i].items && dstSections[i].items[j];
+    if (d && it.image) d.image = it.image;
+  }));
+}
+
 function mockDigest(date) {
   return {
     date,
+    analyzedCount: 1147,
+    sourceCount: 23,
+    usedSources: ["Politika", "Blic", "Večernje novosti", "Danas", "Kurir", "Informer", "Alo!", "RTS", "N1", "Nova", "Euronews Srbija", "B92", "Telegraf", "Tanjug", "Sputnik Srbija", "Pančevac"],
     greeting: "Добро јутро. Дневни преглед вести за данас.",
     intro: "Данас у фокусу: седница Скупштине, кретања цена и припрема репрезентације за наредну утакмицу. Време пријатно за шетњу.",
     sections: [
@@ -124,6 +158,7 @@ function mockDigest(date) {
         id: "glavne-vesti", title: "Главне вести", icon: "📰",
         items: [
           {
+            image: "https://picsum.photos/seed/rs-penzije/640/360",
             title: "Влада усвојила нове мере подршке пензионерима",
             summary: "Влада Србије усвојила је пакет мера усмерен на старије суграђане, укључујући повећање најнижих пензија и додатну помоћ за грејање током зиме. Мере ступају на снагу наредног месеца.",
             facts: ["Повећање најнижих пензија", "Додатак за грејање", "Примена од наредног месеца"],
@@ -131,6 +166,7 @@ function mockDigest(date) {
             links: ["https://example.com/vest1", "https://example.com/vest1b"]
           },
           {
+            image: "https://picsum.photos/seed/rs-put/640/360",
             title: "Радови на путу Београд–Нови Сад привремено успоравају саобраћај",
             summary: "Због редовног одржавања, на деоници аутопута очекују се мања успоравања у преподневним сатима. Возачима се саветује стрпљење и поштовање привремене сигнализације.",
             facts: ["Радови у преподневним сатима", "Могућа успоравања", "Привремена сигнализација"],
@@ -194,6 +230,7 @@ function mockDigest(date) {
           id: "glavne-vesti", title: "À la une", icon: "📰",
           items: [
             {
+              image: "https://picsum.photos/seed/rs-penzije/640/360",
               title: "Le gouvernement adopte de nouvelles mesures de soutien aux retraités",
               summary: "Le gouvernement serbe a adopté un ensemble de mesures destinées aux personnes âgées, dont une hausse des pensions les plus basses et une aide supplémentaire pour le chauffage en hiver. Les mesures entrent en vigueur le mois prochain.",
               facts: ["Hausse des pensions les plus basses", "Aide au chauffage", "Application le mois prochain"],
@@ -201,6 +238,7 @@ function mockDigest(date) {
               links: ["https://example.com/vest1", "https://example.com/vest1b"]
             },
             {
+              image: "https://picsum.photos/seed/rs-put/640/360",
               title: "Travaux sur l'autoroute Belgrade–Novi Sad : ralentissements temporaires",
               summary: "En raison de travaux d'entretien, de légers ralentissements sont attendus le matin sur une portion de l'autoroute. Il est conseillé aux automobilistes d'être patients et de respecter la signalisation temporaire.",
               facts: ["Travaux le matin", "Ralentissements possibles", "Signalisation temporaire"],
