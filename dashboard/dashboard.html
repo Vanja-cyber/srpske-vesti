@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="sr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Контролна табла — Српске вести</title>
+<style>
+:root{--bg:#eef1f5;--card:#fff;--text:#15191e;--muted:#4b5563;--accent:#15508a;--accent-soft:#e9f1f8;--border:#dfe3e8;--ok:#1a7f4b;--bad:#b3261e;}
+html[data-tema="dark"]{--bg:#0d1117;--card:#161b22;--text:#e9edf2;--muted:#aeb9c7;--accent:#5aa9ff;--accent-soft:#16273a;--border:#27313d;--ok:#3fb950;--bad:#ff7a70;}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;font-size:16px;line-height:1.6;}
+.wrap{max-width:980px;margin:0 auto;padding:20px 18px 60px;}
+header.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:8px;}
+h1{font-size:24px;margin:0;}
+.sub{color:var(--muted);font-size:15px;margin:2px 0 0;}
+.controls{display:flex;gap:8px;}
+.ctrl{min-height:40px;padding:0 14px;font-size:15px;font-weight:600;cursor:pointer;border:1px solid var(--border);border-radius:10px;background:var(--card);color:var(--text);}
+.ctrl:hover{border-color:var(--accent);}
+h2{font-size:18px;margin:26px 0 10px;padding-bottom:6px;border-bottom:2px solid var(--accent);}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;}
+.stat{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+.stat .k{color:var(--muted);font-size:13px;text-transform:uppercase;letter-spacing:.04em;}
+.stat .v{font-size:20px;font-weight:700;margin-top:4px;word-break:break-word;}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;}
+.btn{min-height:46px;padding:0 18px;font-size:16px;font-weight:600;cursor:pointer;border-radius:12px;border:1px solid var(--accent);background:var(--accent);color:#fff;}
+.btn.secondary{background:var(--card);color:var(--accent);}
+.btn:disabled{opacity:.5;cursor:not-allowed;}
+pre.out{display:none;background:#0b0e12;color:#d6e2f0;border-radius:12px;padding:14px;overflow:auto;max-height:240px;font-size:13px;white-space:pre-wrap;}
+.row{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:baseline;background:var(--card);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:8px 0;text-decoration:none;color:inherit;}
+.row:hover{border-color:var(--accent);}
+.row .d{font-weight:700;min-width:120px;}
+.row .g{flex:1;color:var(--muted);}
+.row .b{color:var(--accent);font-weight:600;}
+.chip{display:inline-block;font-size:12px;font-weight:600;background:var(--accent-soft);color:var(--accent);border:1px solid var(--border);border-radius:999px;padding:3px 10px;}
+.muted{color:var(--muted);}
+.ok{color:var(--ok);font-weight:700;}
+.bad{color:var(--bad);font-weight:700;}
+.logline{font-size:14px;border-bottom:1px solid var(--border);padding:8px 2px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1 data-i18n="appTitle">Контролна табла</h1>
+      <p class="sub" data-i18n="subtitle">Српске вести — приватни систем</p>
+    </div>
+    <div class="controls">
+      <button id="btnLang" class="ctrl">Français</button>
+      <button id="btnTema" class="ctrl">🌙</button>
+    </div>
+  </header>
+
+  <h2 data-i18n="secStatus">Стање система</h2>
+  <div class="grid" id="status"></div>
+
+  <div class="actions">
+    <button class="btn secondary" data-mode="mock" data-i18n="btnMock">🧪 Демо (без интернета)</button>
+    <button class="btn secondary" data-mode="nosend" data-i18n="btnNoSend">▶ Покрени (без слања)</button>
+    <button class="btn" data-mode="send" data-i18n="btnSend">📤 Покрени и пошаљи</button>
+    <button class="btn secondary" id="btnOpen" data-i18n="btnOpenToday">🌐 Данашњи преглед</button>
+    <button class="btn secondary" id="btnRefresh" data-i18n="btnRefresh">🔄 Освежи</button>
+  </div>
+  <pre class="out" id="out"></pre>
+
+  <h2 data-i18n="secDigests">Архива прегледа</h2>
+  <div id="digests"></div>
+
+  <h2 data-i18n="secLogs">Дневник активности</h2>
+  <div id="logs"></div>
+
+  <h2 data-i18n="secSources">Извори вести</h2>
+  <div id="sources"></div>
+</div>
+
+<script>
+const T = {
+  sr: { appTitle:"Контролна табла", subtitle:"Српске вести — приватни систем", secStatus:"Стање система",
+    secDigests:"Архива прегледа", secLogs:"Дневник активности", secSources:"Извори вести",
+    btnMock:"🧪 Демо (без интернета)", btnNoSend:"▶ Покрени (без слања)", btnSend:"📤 Покрени и пошаљи",
+    btnOpenToday:"🌐 Данашњи преглед", btnRefresh:"🔄 Освежи",
+    lastRun:"Последње покретање", lastDigest:"Последњи преглед", sourcesK:"Извори (раде)", provider:"WhatsApp канал", lastSend:"Последње слање",
+    running:"Извршавање…", none:"—", items:"вести", noData:"Нема података.", langBtn:"Français", sent:"послато", skipped:"прескочено", error:"грешка" },
+  fr: { appTitle:"Tableau de bord", subtitle:"Actualités serbes — système privé", secStatus:"État du système",
+    secDigests:"Archive des résumés", secLogs:"Journal d'activité", secSources:"Sources d'actualités",
+    btnMock:"🧪 Démo (hors-ligne)", btnNoSend:"▶ Lancer (sans envoi)", btnSend:"📤 Lancer et envoyer",
+    btnOpenToday:"🌐 Résumé du jour", btnRefresh:"🔄 Rafraîchir",
+    lastRun:"Dernière exécution", lastDigest:"Dernier résumé", sourcesK:"Sources (OK)", provider:"Canal WhatsApp", lastSend:"Dernier envoi",
+    running:"Exécution…", none:"—", items:"actus", noData:"Aucune donnée.", langBtn:"Српски", sent:"envoyé", skipped:"ignoré", error:"erreur" }
+};
+let lang = localStorage.getItem("dashLang") || "sr";
+let tema = localStorage.getItem("dashTema") || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+let DATA = null;
+
+const $ = (s) => document.querySelector(s);
+function applyTema(){ document.documentElement.setAttribute("data-tema", tema); $("#btnTema").textContent = tema==="dark"?"☀️":"🌙"; localStorage.setItem("dashTema",tema); }
+function t(k){ return (T[lang] && T[lang][k]) || k; }
+function applyLang(){
+  document.documentElement.lang = lang==="fr"?"fr":"sr";
+  document.querySelectorAll("[data-i18n]").forEach(el=>{ el.textContent = t(el.getAttribute("data-i18n")); });
+  $("#btnLang").textContent = t("langBtn");
+  localStorage.setItem("dashLang",lang);
+  if(DATA) render();
+}
+function fmt(ts){ if(!ts) return t("none"); try{ return new Date(ts).toLocaleString(lang==="fr"?"fr-FR":"sr-RS"); }catch{ return ts; } }
+
+function statCard(k,v,cls){ return `<div class="stat"><div class="k">${k}</div><div class="v ${cls||""}">${v}</div></div>`; }
+
+function render(){
+  const { settings, sources, history, logs } = DATA;
+  const last = logs[0] || null;
+  const okSrc = sources.length - ((last && last.feedErrors && last.feedErrors.length) || 0);
+  const prov = (settings.whatsapp && settings.whatsapp.provider) || "none";
+  let sendTxt = t("none"), sendCls = "muted";
+  if(last && last.send){ if(last.send.ok){ sendTxt=t("sent"); sendCls="ok"; } else if(last.send.skipped){ sendTxt=t("skipped"); sendCls="muted"; } else { sendTxt=t("error"); sendCls="bad"; } }
+
+  $("#status").innerHTML =
+    statCard(t("lastRun"), fmt(last && last.ts)) +
+    statCard(t("lastDigest"), (history[0] && history[0].date) || t("none")) +
+    statCard(t("sourcesK"), `${okSrc}/${sources.length}`) +
+    statCard(t("provider"), prov) +
+    statCard(t("lastSend"), sendTxt, sendCls);
+
+  $("#digests").innerHTML = history.length ? history.map(h=>
+    `<a class="row" href="/docs/arhiva/${h.date}.html" target="_blank"><span class="d">${h.date}</span><span class="g">${h.greeting||""}</span><span class="b">${h.items||0} ${t("items")}</span></a>`
+  ).join("") : `<p class="muted">${t("noData")}</p>`;
+
+  $("#logs").innerHTML = logs.length ? logs.slice(0,20).map(l=>{
+    const errs = (l.feedErrors && l.feedErrors.length) || 0;
+    const s = l.send ? (l.send.ok?`<span class="ok">${t("sent")}</span>`: l.send.skipped?`<span class="muted">${t("skipped")}</span>`:`<span class="bad">${t("error")}</span>`) : "";
+    return `<div class="logline">${fmt(l.ts)} · ${l.collected||0}→${l.dedup||0} · ${l.sections||0}/${l.items||0} ${t("items")} · ${errs?`<span class="bad">${errs} ✗</span>`:`<span class="ok">OK</span>`} ${s?("· "+s):""}</div>`;
+  }).join("") : `<p class="muted">${t("noData")}</p>`;
+
+  $("#sources").innerHTML = sources.length ? sources.map(s=>
+    `<div class="row"><span class="d">${s.name}</span><span class="chip">${s.category}</span><span class="g muted" style="font-size:13px">${s.url}</span></div>`
+  ).join("") : `<p class="muted">${t("noData")}</p>`;
+}
+
+async function load(){
+  const r = await fetch("/api/state"); DATA = await r.json(); render();
+}
+async function runMode(mode){
+  const btns = document.querySelectorAll(".btn"); btns.forEach(b=>b.disabled=true);
+  const out = $("#out"); out.style.display="block"; out.textContent = t("running");
+  try{
+    const r = await fetch("/api/run?mode="+mode, { method:"POST" });
+    const j = await r.json();
+    out.textContent = (j.output||"") + "\n[exit "+(j.code)+"]";
+  }catch(e){ out.textContent = String(e); }
+  btns.forEach(b=>b.disabled=false);
+  load();
+}
+
+$("#btnLang").onclick = ()=>{ lang = lang==="fr"?"sr":"fr"; applyLang(); };
+$("#btnTema").onclick = ()=>{ tema = tema==="dark"?"light":"dark"; applyTema(); };
+$("#btnRefresh").onclick = load;
+$("#btnOpen").onclick = ()=> window.open("/docs/index.html","_blank");
+document.querySelectorAll("[data-mode]").forEach(b=> b.onclick = ()=>runMode(b.getAttribute("data-mode")));
+
+applyTema(); applyLang(); load();
+</script>
+</body>
+</html>

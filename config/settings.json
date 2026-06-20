@@ -1,10 +1,10 @@
 {
-  "recipientName": "бака",
+  "recipientName": "",
   "sendHourLocal": "09:30",
   "timezone": "Europe/Belgrade",
   "defaultScript": "cyrillic",
   "lookbackHours": 24,
-  "maxArticles": 120,
+  "maxArticles": 150,
   "model": "claude-sonnet-4-6",
   "ultraModel": "claude-opus-4-8",
   "ultra": false,

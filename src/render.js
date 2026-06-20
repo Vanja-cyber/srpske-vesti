@@ -146,17 +146,16 @@ function renderBody(d, lang, ctx) {
     (d.sections || []).map((s) => renderSection(s, lang)).join("") +
     `<footer class="podnozje">` +
     `<p>${esc(t.footerAuto)}${ctx.generatedAt ? " • " + esc(ctx.generatedAt) : ""}</p>` +
-    `<p class="srce">${esc(t.footerLove)}</p>` +
     `</footer>`
   );
 }
 
 const CSS = `
-#app{--bg:#f4f6f8;--card:#fff;--text:#15191e;--muted:#5a6472;--accent:#15508a;--accent-soft:#e9f1f8;--border:#e2e6ea;--alert:#b3261e;--alert-soft:#fdecec;
+#app{--bg:#f4f6f8;--card:#fff;--text:#15191e;--muted:#4b5563;--accent:#15508a;--accent-soft:#e9f1f8;--border:#e2e6ea;--alert:#b3261e;--alert-soft:#fdecec;
   background:var(--bg);color:var(--text);min-height:100vh;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  font-size:20px;line-height:1.7;-webkit-text-size-adjust:100%;}
-#app[data-tema="dark"]{--bg:#0f141a;--card:#1a212b;--text:#e9edf2;--muted:#9aa6b4;--accent:#5aa9ff;--accent-soft:#16273a;--border:#27313d;--alert:#ff7a70;--alert-soft:#2a1614;}
+  font-size:21px;line-height:1.75;-webkit-text-size-adjust:100%;}
+#app[data-tema="dark"]{--bg:#0f141a;--card:#1a212b;--text:#e9edf2;--muted:#b3bdca;--accent:#5aa9ff;--accent-soft:#16273a;--border:#27313d;--alert:#ff7a70;--alert-soft:#2a1614;}
 #app *{box-sizing:border-box;}
 #app .controls{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;
   padding:12px 18px;background:var(--bg);border-bottom:1px solid var(--border);}
@@ -167,18 +166,18 @@ const CSS = `
 #app .sadrzaj[hidden]{display:none;}
 #app .zaglavlje{margin:6px 0 22px;}
 #app .datum{color:var(--muted);font-size:18px;}
-#app .zaglavlje h1{font-size:32px;line-height:1.25;margin:6px 0 10px;}
-#app .uvod{font-size:21px;background:var(--accent-soft);padding:14px 16px;border-radius:14px;border:1px solid var(--border);margin:0;}
-#app .sekcija{margin:26px 0;}
-#app .sekcija h2{font-size:25px;display:flex;align-items:center;gap:10px;padding-bottom:8px;margin:0 0 6px;border-bottom:2px solid var(--accent);}
+#app .zaglavlje h1{font-size:33px;line-height:1.25;margin:6px 0 12px;}
+#app .uvod{font-size:22px;line-height:1.8;background:var(--accent-soft);padding:16px 18px;border-radius:14px;border:1px solid var(--border);margin:0;}
+#app .sekcija{margin:30px 0;}
+#app .sekcija h2{font-size:26px;display:flex;align-items:center;gap:10px;padding-bottom:8px;margin:0 0 8px;border-bottom:2px solid var(--accent);}
 #app .ikona{font-size:26px;}
-#app .vest{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:18px 18px 14px;margin:14px 0;box-shadow:0 1px 2px rgba(0,0,0,.04);}
-#app .vest h3{font-size:22px;line-height:1.35;margin:0 0 8px;}
-#app .rezime{margin:0 0 12px;}
-#app .cinjenice{background:var(--accent-soft);border-radius:12px;padding:10px 14px;margin:0 0 12px;}
-#app .oznaka{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:4px;}
+#app .vest{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px 22px 18px;margin:18px 0;box-shadow:0 1px 2px rgba(0,0,0,.04);}
+#app .vest h3{font-size:24px;line-height:1.4;margin:0 0 10px;}
+#app .rezime{margin:0 0 16px;font-size:21px;line-height:1.85;}
+#app .cinjenice{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin:0 0 14px;}
+#app .oznaka{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 #app .cinjenice ul{margin:4px 0 0;padding-left:22px;}
-#app .cinjenice li{margin:4px 0;}
+#app .cinjenice li{margin:7px 0;}
 #app .izvori{display:flex;flex-wrap:wrap;gap:8px;}
 #app .izvor{display:inline-block;font-size:16px;font-weight:600;text-decoration:none;color:var(--accent);
   background:var(--accent-soft);border:1px solid var(--border);border-radius:999px;padding:7px 14px;min-height:38px;}

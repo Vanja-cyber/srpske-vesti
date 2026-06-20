@@ -5,33 +5,74 @@ const parser = new Parser({
   headers: { "User-Agent": "srpske-vesti/0.1 (+daily news digest)" }
 });
 
+// Неки српски феедови имају неисправан XML (голи „&“, BOM…). Поправљамо најчешће.
+function sanitizeXml(xml) {
+  return xml
+    .replace(/^﻿/, "")
+    .replace(/&(?!(?:amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);)/g, "&amp;");
+}
+
+// Дохвати и распарсирај феед, уз благ покушај поправке ако XML није валидан.
+export async function fetchFeed(url) {
+  const res = await fetch(url, {
+    headers: { "User-Agent": "srpske-vesti/0.1 (+daily news digest)", Accept: "application/rss+xml, application/xml, text/xml, */*" },
+    redirect: "follow",
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!res.ok) throw new Error("HTTP " + res.status);
+  const xml = await res.text();
+  try {
+    return await parser.parseString(xml);
+  } catch {
+    return await parser.parseString(sanitizeXml(xml));
+  }
+}
+
+// Google News у наслову често има облик „Наслов - Извор“. Извлачимо извор.
+function sourceFromTitle(title, fallback) {
+  const m = /^(.*) - ([^-]+)$/.exec(String(title || "").trim());
+  if (m && m[2].length <= 40) return { title: m[1].trim(), source: m[2].trim() };
+  return { title: String(title || "").trim(), source: fallback };
+}
+
 // Сакупља чланке из свих извора, задржава само оне из последњих `hours` сати.
 export async function collect(sources, hours = 24) {
   const since = Date.now() - hours * 3600 * 1000;
   const articles = [];
   const errors = [];
 
-  for (const s of sources) {
-    try {
-      const feed = await parser.parseURL(s.url);
-      for (const it of feed.items || []) {
-        const raw = it.isoDate || it.pubDate || "";
-        const ts = raw ? Date.parse(raw) : NaN;
-        // Без датума -> задржи; са датумом -> само ако је свеже.
-        if (!Number.isNaN(ts) && ts < since) continue;
-        const title = (it.title || "").trim();
-        if (!title) continue;
-        articles.push({
-          title,
-          link: it.link || "",
-          source: s.name,
-          category: s.category || "glavne",
-          date: raw,
-          snippet: (it.contentSnippet || it.summary || "").replace(/\s+/g, " ").slice(0, 400).trim()
-        });
+  const settled = await Promise.allSettled(
+    sources.map(async (s) => ({ s, feed: await fetchFeed(s.url) }))
+  );
+
+  for (let i = 0; i < settled.length; i++) {
+    const s = sources[i];
+    const r = settled[i];
+    if (r.status === "rejected") {
+      errors.push({ source: s.name, url: s.url, error: String(r.reason && r.reason.message ? r.reason.message : r.reason).slice(0, 80) });
+      continue;
+    }
+    const isGN = /news\.google\.com/.test(s.url);
+    for (const it of r.value.items || []) {
+      const raw = it.isoDate || it.pubDate || "";
+      const ts = raw ? Date.parse(raw) : NaN;
+      if (!Number.isNaN(ts) && ts < since) continue;
+      let title = (it.title || "").trim();
+      let source = s.name;
+      if (isGN) {
+        const parsed = sourceFromTitle(title, s.name);
+        title = parsed.title;
+        source = parsed.source;
       }
-    } catch (e) {
-      errors.push({ source: s.name, url: s.url, error: String(e && e.message ? e.message : e) });
+      if (!title) continue;
+      articles.push({
+        title,
+        link: it.link || "",
+        source,
+        category: s.category || "glavne",
+        date: raw,
+        snippet: (it.contentSnippet || it.summary || "").replace(/\s+/g, " ").slice(0, 400).trim()
+      });
     }
   }
   return { articles, errors };

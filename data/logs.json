@@ -1,5 +1,31 @@
 [
   {
+    "ts": "2026-06-20T07:45:29.223Z",
+    "date": "2026-06-20",
+    "collected": 0,
+    "dedup": 0,
+    "feedErrors": [],
+    "sections": 5,
+    "items": 6,
+    "send": {
+      "skipped": true,
+      "reason": "--no-send"
+    }
+  },
+  {
+    "ts": "2026-06-20T07:39:20.465Z",
+    "date": "2026-06-20",
+    "collected": 0,
+    "dedup": 0,
+    "feedErrors": [],
+    "sections": 5,
+    "items": 6,
+    "send": {
+      "skipped": true,
+      "reason": "--no-send"
+    }
+  },
+  {
     "ts": "2026-06-20T07:28:22.090Z",
     "date": "2026-06-20",
     "collected": 0,

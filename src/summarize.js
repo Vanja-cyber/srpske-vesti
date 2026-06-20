@@ -1,7 +1,7 @@
 // Позива Claude (Anthropic Messages API преко fetch-а, без SDK-а)
 // и враћа структуриран дневни преглед као JSON.
 
-const SYSTEM = `You are the chief editor of a daily Serbian news digest prepared for an elderly reader (a grandmother).
+const SYSTEM = `You are the chief editor of a daily Serbian news digest prepared for an older reader.
 Read the provided news items (collected in the last 24h from Serbian media and agencies) and produce ONE clear, warm, well-structured daily digest.
 
 HARD RULES:
@@ -14,7 +14,7 @@ HARD RULES:
 
 JSON SHAPE:
 {
-  "greeting": "warm one-line good-morning greeting in Serbian Cyrillic, addressed to the grandmother",
+  "greeting": "neutral, professional one-line good-morning greeting in Serbian Cyrillic — do NOT address anyone by name",
   "intro": "1-2 sentence overview of the day in Serbian Cyrillic",
   "sections": [
     { "id": <allowed id>, "title": <Serbian Cyrillic title>, "icon": <emoji>,

@@ -117,7 +117,7 @@ async function main() {
 function mockDigest(date) {
   return {
     date,
-    greeting: "Добро јутро, бако! Ево вашег прегледа вести.",
+    greeting: "Добро јутро. Дневни преглед вести за данас.",
     intro: "Данас у фокусу: седница Скупштине, кретања цена и припрема репрезентације за наредну утакмицу. Време пријатно за шетњу.",
     sections: [
       {
@@ -187,7 +187,7 @@ function mockDigest(date) {
     },
     fr: {
       date,
-      greeting: "Bonjour mamie ! Voici ton aperçu de l'actualité.",
+      greeting: "Bonjour. Voici l'aperçu de l'actualité du jour.",
       intro: "Aujourd'hui en bref : séance de l'Assemblée, évolution des prix et préparation de la sélection pour le prochain match. Temps agréable pour une promenade.",
       sections: [
         {
