@@ -1,0 +1,14 @@
+[
+  { "name": "N1", "url": "https://n1info.rs/feed/", "category": "glavne" },
+  { "name": "N1 Србија", "url": "https://n1info.rs/srbija/feed/", "category": "srbija" },
+  { "name": "N1 Свет", "url": "https://n1info.rs/svet/feed/", "category": "svet" },
+  { "name": "N1 Бизнис", "url": "https://n1info.rs/biznis/feed/", "category": "ekonomija" },
+  { "name": "N1 Спорт", "url": "https://n1info.rs/sport/feed/", "category": "sport" },
+  { "name": "Danas", "url": "https://www.danas.rs/feed/", "category": "glavne" },
+  { "name": "Danas Политика", "url": "https://www.danas.rs/politika/feed/", "category": "politika" },
+  { "name": "Danas Економија", "url": "https://www.danas.rs/ekonomija/feed/", "category": "ekonomija" },
+  { "name": "Nova.rs", "url": "https://nova.rs/feed/", "category": "glavne" },
+  { "name": "Euronews Србија", "url": "https://www.euronews.rs/rss", "category": "glavne" },
+  { "name": "Blic", "url": "https://www.blic.rs/rss/danasnje-vesti", "category": "glavne" },
+  { "name": "Vreme", "url": "https://www.vreme.com/feed/", "category": "glavne" }
+]

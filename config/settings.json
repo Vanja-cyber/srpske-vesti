@@ -1,0 +1,14 @@
+{
+  "recipientName": "бака",
+  "sendHourLocal": "09:30",
+  "timezone": "Europe/Belgrade",
+  "defaultScript": "cyrillic",
+  "lookbackHours": 24,
+  "maxArticles": 120,
+  "model": "claude-sonnet-4-6",
+  "ultraModel": "claude-opus-4-8",
+  "ultra": false,
+  "weather": { "enabled": true, "lat": 44.7866, "lon": 20.4489, "city": "Београд" },
+  "whatsapp": { "provider": "callmebot" },
+  "siteBaseUrl": ""
+}

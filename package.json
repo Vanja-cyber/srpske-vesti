@@ -1,0 +1,19 @@
+{
+  "name": "srpske-vesti",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Аутоматски дневни преглед српских вести — за баку, преко WhatsApp-а.",
+  "scripts": {
+    "digest": "node src/index.js",
+    "ultra": "node src/index.js --ultra",
+    "mock": "node src/index.js --mock --no-send",
+    "preview": "node src/index.js --mock --no-send && npx --yes serve docs -l 4173"
+  },
+  "dependencies": {
+    "rss-parser": "^3.13.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
