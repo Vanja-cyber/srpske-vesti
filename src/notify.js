@@ -28,7 +28,7 @@ function buildText(link, digest) {
 
 export async function notify(link, opts = {}) {
   const provider = (opts.provider || process.env.WHATSAPP_PROVIDER || "none").toLowerCase();
-  const text = buildText(link, opts.digest);
+  const text = opts.text || buildText(link, opts.digest);
   if (provider === "none") return { provider, skipped: true, reason: "провајдер није подешен", preview: text };
   if (provider === "callmebot") return sendCallMeBot(text);
   if (provider === "meta") return sendMeta(link, text);
