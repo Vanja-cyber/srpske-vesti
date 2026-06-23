@@ -9,6 +9,7 @@
     "ultra": "node src/index.js --ultra",
     "mock": "node src/index.js --mock --no-send",
     "test-feeds": "node scripts/test-feeds.mjs",
+    "test-send": "node scripts/test-send.mjs",
     "preview": "node src/index.js --mock --no-send && npx --yes serve docs -l 4173"
   },
   "dependencies": {
