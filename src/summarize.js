@@ -82,7 +82,7 @@ async function callTool({ apiKey, model, maxTokens, system, user, tool }) {
         method: "POST",
         headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
         body,
-        signal: AbortSignal.timeout(150000)
+        signal: AbortSignal.timeout(300000)
       });
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`Anthropic API ${res.status}`);
@@ -132,7 +132,7 @@ export async function summarize(articles, opts = {}) {
     `Позови алат "emit_digest" са дневним прегледом.`;
 
   const digest = await callTool({
-    apiKey, model, maxTokens: ultra ? 20000 : 12000, system: SYSTEM, user,
+    apiKey, model, maxTokens: ultra ? 16000 : 8000, system: SYSTEM, user,
     tool: { name: "emit_digest", description: "Врати структуриран дневни преглед вести.", input_schema: DIGEST_SCHEMA }
   });
   digest.date = date;

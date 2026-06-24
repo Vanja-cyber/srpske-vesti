@@ -1,0 +1,37 @@
+name: Припрема прегледа (09:10)
+
+on:
+  schedule:
+    # GitHub користи UTC. 07:10 UTC = 09:10 у Београду (лето, CEST). Зими: 08:10 UTC.
+    - cron: "10 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: priprema-pregleda
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Инсталирај зависности
+        run: npm install --no-audit --no-fund
+      - name: Направи преглед (БЕЗ слања)
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+        run: node src/index.js --no-send
+      - name: Сачувај резултате (docs/ + data/)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add docs data
+          git commit -m "Преглед припремљен $(date +%F)" || echo "Нема промена за чување."
+          git push

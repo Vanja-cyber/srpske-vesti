@@ -104,12 +104,12 @@ if (pages.status === 409) { log("• Pages већ укључен"); }
 else if (pages.ok || pages.status === 201) { log("✓ GitHub Pages укључен (/docs)"); }
 else { log(`• Pages: ${pages.status} ${pages.json.message || ""} (можеш ручно: Settings → Pages → main /docs)`); }
 
-// 7) Прво покретање (само ако је Claude кључ постављен)
-if (ANTHROPIC) {
-  const disp = await gh("POST", `/repos/${OWNER}/${REPO}/actions/workflows/daily.yml/dispatches`, { ref: "main" });
-  log(disp.status === 204 ? "✓ Прва анализа покренута" : `• Покретање: ${disp.status} ${disp.json.message || ""} (Actions → Run workflow)`);
+// 7) Прво покретање припреме (само ако је Claude кључ постављен)
+if (ANTHROPIC && !process.env.NO_RUN) {
+  const disp = await gh("POST", `/repos/${OWNER}/${REPO}/actions/workflows/prepare.yml/dispatches`, { ref: "main" });
+  log(disp.status === 204 ? "✓ Припрема прегледа покренута" : `• Покретање: ${disp.status} ${disp.json.message || ""} (Actions → Run workflow)`);
 } else {
-  log("• Прескочено прво покретање — недостаје Claude кључ (ANTHROPIC_API_KEY).");
+  log("• Прескочено покретање припреме.");
 }
 
 log("\n──────────────────────────────────────");

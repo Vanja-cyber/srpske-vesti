@@ -13,6 +13,7 @@ const args = new Set(process.argv.slice(2));
 const MOCK = args.has("--mock");
 const NOSEND = args.has("--no-send");
 const ULTRA = args.has("--ultra");
+const SENDONLY = args.has("--send-only");
 
 function readJson(p, fb) {
   try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return fb; }
@@ -44,6 +45,22 @@ async function main() {
   const docsDir = path.join(ROOT, "docs");
   fs.mkdirSync(path.join(docsDir, "arhiva"), { recursive: true });
   fs.mkdirSync(path.join(ROOT, "data"), { recursive: true });
+
+  // Режим „само слање“: учита већ припремљен преглед и пошаље WhatsApp (без анализе).
+  if (SENDONLY) {
+    const prepared = readJson(path.join(ROOT, "data", `${date}.json`), null);
+    const base = (process.env.SITE_BASE_URL || settings.siteBaseUrl || "").replace(/\/+$/, "");
+    const link = base ? `${base}/` : "(SITE_BASE_URL није подешен)";
+    const sendResult = prepared
+      ? await notify(link, { provider: settings.whatsapp && settings.whatsapp.provider, digest: prepared })
+      : { ok: false, error: `нема припремљеног прегледа за ${date}` };
+    const logsPath = path.join(ROOT, "data", "logs.json");
+    const logs = readJson(logsPath, []);
+    logs.unshift({ ts: new Date().toISOString(), date, phase: "send", send: sendResult });
+    writeJson(logsPath, logs.slice(0, 200));
+    console.log("WhatsApp (слање):", JSON.stringify(sendResult));
+    return;
+  }
 
   const meta = { collected: 0, dedup: 0, feedErrors: [] };
   let digest;

@@ -1,0 +1,32 @@
+name: Слање прегледа (09:30)
+
+on:
+  schedule:
+    # 07:30 UTC = 09:30 у Београду (лето, CEST). Зими: 08:30 UTC.
+    - cron: "30 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: slanje-pregleda
+  cancel-in-progress: false
+
+jobs:
+  send:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Инсталирај зависности
+        run: npm install --no-audit --no-fund
+      - name: Пошаљи WhatsApp са линком (припремљени преглед)
+        env:
+          SITE_BASE_URL: ${{ vars.SITE_BASE_URL }}
+          WHATSAPP_PROVIDER: ${{ vars.WHATSAPP_PROVIDER }}
+          CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
+          CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+        run: node src/index.js --send-only
