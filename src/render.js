@@ -226,15 +226,38 @@ const SCRIPT = `
   function applyTema(){ app.setAttribute("data-tema",tema); if(btnT)btnT.textContent=(tema==="dark")?"☀️":"🌙"; localStorage.setItem("tema",tema); }
   if(btnT)btnT.addEventListener("click",function(){ tema=(tema==="dark")?"light":"dark"; applyTema(); });
   var speaking=false;
-  function stopA(){ if(window.speechSynthesis)window.speechSynthesis.cancel(); speaking=false; if(btnA)btnA.textContent=(jezik==="fr")?"🔊 Écouter":"🔊 Слушај"; }
+  function resetA(){ speaking=false; if(btnA)btnA.textContent=(jezik==="fr")?"🔊 Écouter":"🔊 Слушај"; }
+  function pickVoice(lang){
+    var vs=(window.speechSynthesis.getVoices()||[]);
+    if(lang.indexOf("fr")===0) return vs.filter(function(v){return /^fr/i.test(v.lang);})[0]||null;
+    return vs.filter(function(v){return /^sr/i.test(v.lang);})[0]
+        || vs.filter(function(v){return /^(hr|bs|sl)/i.test(v.lang);})[0]
+        || vs.filter(function(v){return /^(ru|mk|cs|pl)/i.test(v.lang);})[0] || null;
+  }
+  function speakNow(text,lang){
+    var voice=pickVoice(lang);
+    var sents=text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text];
+    var parts=[],cur="";
+    sents.forEach(function(s){ if((cur+s).length>220){ if(cur.trim())parts.push(cur); cur=s; } else { cur+=s; } });
+    if(cur.trim())parts.push(cur);
+    window.speechSynthesis.cancel();
+    speaking=true; if(btnA)btnA.textContent=(jezik==="fr")?"⏹ Arrêter":"⏹ Заустави";
+    parts.forEach(function(p,i){
+      var u=new SpeechSynthesisUtterance(p.trim());
+      u.lang=lang; if(voice)u.voice=voice; u.rate=.92;
+      if(i===parts.length-1)u.onend=resetA;
+      u.onerror=resetA;
+      window.speechSynthesis.speak(u);
+    });
+  }
   if(btnA)btnA.addEventListener("click",function(){
-    if(!("speechSynthesis" in window))return;
-    if(speaking){ stopA(); return; }
-    var m=visMain(); var text=m?m.innerText:""; if(!text)return;
-    var u=new SpeechSynthesisUtterance(text); u.lang=(jezik==="fr")?"fr-FR":"sr-RS"; u.rate=.95;
-    u.onend=stopA; u.onerror=stopA;
-    window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); speaking=true;
-    btnA.textContent=(jezik==="fr")?"⏹ Arrêter":"⏹ Заустави";
+    if(!("speechSynthesis" in window)){ alert("Читање наглас није подржано на овом уређају."); return; }
+    if(speaking){ window.speechSynthesis.cancel(); resetA(); return; }
+    var m=visMain(); if(!m)return; var raw=m.innerText||""; if(!raw)return;
+    var lang=(jezik==="fr")?"fr-FR":"sr-RS";
+    var text=(jezik==="fr")?raw:toLat(raw); // српски: читај латиницу (боља изговор)
+    if(((window.speechSynthesis.getVoices()||[]).length)===0){ window.speechSynthesis.getVoices(); setTimeout(function(){ speakNow(text,lang); },350); }
+    else { speakNow(text,lang); }
   });
   applyTema(); applyPismo(); applyJezik();
 })();
