@@ -169,6 +169,7 @@ function mockDigest(date) {
     sourceCount: 23,
     usedSources: ["Politika", "Blic", "Večernje novosti", "Danas", "Kurir", "Informer", "Alo!", "RTS", "N1", "Nova", "Euronews Srbija", "B92", "Telegraf", "Tanjug", "Sputnik Srbija", "Pančevac"],
     greeting: "Добро јутро. Дневни преглед вести за данас.",
+    overview: "Данас обележавају три велике теме. Влада Србије представила је пакет мера подршке најстаријима — од повећања најнижих пензија до помоћи за грејање — што је одмах постало главна тема разговора и у домовима и у Скупштини.\n\nУ исто време, у економији влада опрезни оптимизам: динар је стабилан, а цене основних намирница нису се значајније мењале, иако грађани и даље пажљиво прате своје трошкове.\n\nИз света стижу важне вести које се тичу и нас, док се у спорту пажња окреће ка репрезентацији и њеним припремама за наредни меч.\n\nУ наставку следе детаљни прегледи по темама, са изворима и линковима ако желите да прочитате више.",
     intro: "Данас у фокусу: седница Скупштине, кретања цена и припрема репрезентације за наредну утакмицу. Време пријатно за шетњу.",
     sections: [
       {
@@ -241,6 +242,7 @@ function mockDigest(date) {
     fr: {
       date,
       greeting: "Bonjour. Voici l'aperçu de l'actualité du jour.",
+      overview: "Trois grands thèmes dominent aujourd'hui. Le gouvernement serbe a présenté un ensemble de mesures de soutien aux plus âgés — de la hausse des plus petites retraites à l'aide au chauffage — devenu aussitôt le principal sujet de conversation, à la maison comme à l'Assemblée.\n\nDans le même temps, l'économie respire un optimisme prudent : le dinar est stable et les prix des produits de base n'ont guère bougé, même si chacun surveille ses dépenses.\n\nDu reste du monde nous parviennent des nouvelles importantes qui nous concernent aussi, tandis que le sport tourne son regard vers la sélection et sa préparation au prochain match.\n\nSuivent des aperçus détaillés par thème, avec les sources et des liens si vous souhaitez en lire davantage.",
       intro: "Aujourd'hui en bref : séance de l'Assemblée, évolution des prix et préparation de la sélection pour le prochain match. Temps agréable pour une promenade.",
       sections: [
         {

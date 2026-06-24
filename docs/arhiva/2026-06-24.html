@@ -7,111 +7,79 @@
 </head>
 <body style="margin:0">
 <style>
-#app{--bg:#f5f3ee;--card:#ffffff;--text:#1d2125;--muted:#5b6573;--accent:#9a3328;--accent-2:#1f5f8b;--accent-soft:#efe9df;--border:#e4ddd0;--alert:#b3261e;--alert-soft:#fbeae6;
+#app{--bg:#f6f7f9;--card:#ffffff;--text:#191c20;--muted:#56606b;--accent:#a01b1b;--accent2:#15539e;--soft:#f1f3f6;--border:#e4e7ec;--alert:#b3261e;--alert-soft:#fdecec;
   background:var(--bg);color:var(--text);min-height:100vh;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  font-size:21px;line-height:1.75;-webkit-text-size-adjust:100%;}
-#app[data-tema="dark"]{--bg:#1c2230;--card:#262d3d;--text:#eef1f6;--muted:#b3bdca;--accent:#ff9a8a;--accent-2:#8ec5ff;--accent-soft:#2e3647;--border:#39435a;--alert:#ff8175;--alert-soft:#3a2420;}
+  font-family:Georgia,"Times New Roman",-apple-system,BlinkMacSystemFont,"Segoe UI",serif;
+  font-size:21px;line-height:1.8;-webkit-text-size-adjust:100%;}
+#app[data-tema="dark"]{--bg:#12161c;--card:#1b212a;--text:#eceff3;--muted:#aab4c0;--accent:#ff8a7a;--accent2:#7fb2ff;--soft:#222a35;--border:#2c3540;--alert:#ff8175;--alert-soft:#33201d;}
 #app *{box-sizing:border-box;}
 #app .controls{position:sticky;top:0;z-index:10;display:flex;flex-wrap:wrap;gap:8px;justify-content:center;
-  padding:12px 14px;background:var(--bg);border-bottom:1px solid var(--border);}
-#app .ctrl{min-height:46px;min-width:46px;padding:0 15px;font-size:17px;font-weight:600;cursor:pointer;
+  padding:12px 14px;background:var(--bg);border-bottom:1px solid var(--border);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+#app .ctrl{min-height:46px;min-width:46px;padding:0 16px;font-size:17px;font-weight:600;cursor:pointer;
   border:1px solid var(--border);border-radius:12px;background:var(--card);color:var(--text);}
 #app .ctrl:hover{border-color:var(--accent);}
-#app .searchbar{max-width:720px;margin:12px auto 0;padding:0 18px;}
-#app .search{width:100%;min-height:48px;padding:0 18px;font-size:18px;border:1px solid var(--border);border-radius:14px;background:var(--card);color:var(--text);}
-#app .sadrzaj{max-width:720px;margin:0 auto;padding:18px 18px 64px;}
+#app .sadrzaj{max-width:740px;margin:0 auto;padding:20px 20px 70px;}
 #app .sadrzaj[hidden]{display:none;}
-#app .zaglavlje{margin:6px 0 22px;}
-#app .datum{color:var(--muted);font-size:18px;}
-#app .zaglavlje h1{font-size:33px;line-height:1.2;margin:6px 0 12px;letter-spacing:-.01em;}
-#app .uvod{font-size:22px;line-height:1.8;background:var(--accent-soft);padding:16px 18px;border-radius:14px;border:1px solid var(--border);margin:0;}
-#app .meta-info{color:var(--muted);font-size:16px;margin:12px 0 0;}
-#app .sekcija{margin:30px 0;}
-#app .sekcija h2{font-size:26px;display:flex;align-items:center;gap:10px;padding-bottom:8px;margin:0 0 10px;border-bottom:3px solid var(--accent);}
+#app .zaglavlje{margin:8px 0 26px;border-bottom:3px double var(--accent);padding-bottom:16px;}
+#app .datum{color:var(--muted);font-size:18px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;}
+#app .zaglavlje h1{font-size:36px;line-height:1.2;margin:8px 0 0;letter-spacing:-.01em;}
+#app .sekcija{margin:34px 0;}
+#app .sekcija h2{font-size:27px;display:flex;align-items:center;gap:10px;padding-bottom:8px;margin:0 0 14px;border-bottom:2px solid var(--accent);}
 #app .ikona{font-size:26px;}
-#app .vest{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:20px;margin:18px 0;box-shadow:0 1px 3px rgba(40,30,10,.05);overflow:hidden;}
-#app .slika{width:100%;max-height:260px;object-fit:cover;border-radius:12px;margin:0 0 14px;display:block;background:var(--accent-soft);}
-#app .vest h3{font-size:23px;line-height:1.4;margin:0 0 10px;}
-#app .rezime{margin:0 0 14px;font-size:21px;line-height:1.8;}
-#app .cinjenice{background:var(--accent-soft);border-radius:12px;padding:12px 16px;margin:0 0 14px;}
-#app .oznaka{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
+#app .pregled-dana{background:var(--soft);border:1px solid var(--border);border-radius:16px;padding:8px 22px 18px;}
+#app .pregled{font-size:21px;line-height:1.9;margin:14px 0;}
+#app .vest{margin:22px 0;padding:0 0 20px;border-bottom:1px solid var(--border);}
+#app .slika{width:100%;max-height:300px;object-fit:cover;border-radius:10px;margin:0 0 14px;display:block;background:var(--soft);}
+#app .vest h3{font-size:25px;line-height:1.35;margin:0 0 12px;}
+#app .rezime{margin:0 0 14px;font-size:21px;line-height:1.85;}
+#app .cinjenice{background:var(--soft);border-left:4px solid var(--accent);border-radius:6px;padding:12px 18px;margin:0 0 14px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;}
+#app .oznaka{display:inline-block;font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--accent);margin-bottom:6px;}
 #app .cinjenice ul{margin:4px 0 0;padding-left:22px;}
-#app .cinjenice li{margin:6px 0;}
-#app .izvori{display:flex;flex-wrap:wrap;gap:8px;}
-#app .izvor{display:inline-block;font-size:16px;font-weight:600;text-decoration:none;color:var(--accent-2);
-  background:var(--accent-soft);border:1px solid var(--border);border-radius:999px;padding:7px 14px;min-height:38px;}
-#app a.izvor:hover{border-color:var(--accent-2);text-decoration:underline;}
-#app .vreme-karta{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:18px;padding:18px 20px;}
+#app .cinjenice li{margin:7px 0;font-size:19px;}
+#app .izvori{display:flex;flex-wrap:wrap;gap:8px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;}
+#app .izvor{display:inline-block;font-size:16px;font-weight:600;text-decoration:none;color:var(--accent2);
+  background:var(--soft);border:1px solid var(--border);border-radius:999px;padding:7px 15px;min-height:38px;}
+#app a.izvor:hover{border-color:var(--accent2);text-decoration:underline;}
+#app .vreme-karta{display:flex;align-items:center;gap:16px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px 20px;}
 #app .vreme .temp{font-size:36px;font-weight:700;white-space:nowrap;}
-#app .vreme-opis{color:var(--muted);font-size:19px;}
+#app .vreme-opis{color:var(--muted);font-size:20px;}
 #app .sekcija.hitno h2{border-color:var(--alert);color:var(--alert);}
-#app .sekcija.hitno .vest{border-color:var(--alert);background:var(--alert-soft);}
-#app .izvori-korisceni .izvor{color:var(--text);}
-#app .podnozje{margin-top:44px;text-align:center;color:var(--muted);font-size:16px;border-top:1px solid var(--border);padding-top:18px;}
-@media print{#app .controls,#app .searchbar{display:none!important;}#app .vest{break-inside:avoid;border-color:#ccc;}#app{--bg:#fff;}}
-</style><div id="app" data-tema="light" data-pismo="cyrillic"><div class="controls"><button id="btnP" class="ctrl" aria-label="Промени писмо">Latinica</button><button id="btnA" class="ctrl" data-sr="🔊 Слушај" data-fr="🔊 Écouter" aria-label="Слушај">🔊 Слушај</button><button id="btnPDF" class="ctrl" data-sr="🖨 PDF" data-fr="🖨 PDF" aria-label="PDF">🖨 PDF</button><button id="btnShare" class="ctrl" data-sr="↗ Подели" data-fr="↗ Partager" aria-label="Подели">↗ Подели</button><button id="btnT" class="ctrl" aria-label="Промени тему">🌙</button></div><div class="searchbar"><input id="pretraga" class="search" type="search" data-sr="Претражи данашње вести…" data-fr="Rechercher dans l'actualité du jour…" placeholder="Претражи данашње вести…" aria-label="Претрага"></div><main id="sadrzaj-sr" class="sadrzaj"><header class="zaglavlje"><div class="datum">среда, 24. јуна 2026.</div><h1>Добро јутро — добродошли у среду, 24. јуна 2026. године.</h1><p class="uvod">Данашњи преглед доноси вам најважније вести из земље и света: напетости око иранског нуклеарног програма и америчког Сената, буран дан на домаћој политичкој сцени обележен случајем „звучни топ&quot;, вести са Светског фудбалског првенства, као и упозорења на временске непогоде. Читајте редом — одабрали смо само оно што је важно.</p><p class="meta-info">Анализирано 1216 чланака из 27 извора</p></header><section class="sekcija vreme"><h2><span class="ikona">🌤️</span> Време — Београд</h2><div class="vreme-karta"><div class="temp">☀️ 26°</div><div class="vreme-opis">Ведро • од 23° до 32°</div></div></section><footer class="podnozje"><p>Аутоматски генерисан преглед • 24.6.26. 09:32</p></footer></main></div><script>
+#app .izvori-korisceni h2{font-size:20px;border-bottom-width:1px;}
+#app .podnozje{margin-top:46px;text-align:center;color:var(--muted);font-size:16px;border-top:1px solid var(--border);padding-top:18px;font-family:-apple-system,BlinkMacSystemFont,sans-serif;}
+</style><div id="app" data-tema="light" data-pismo="cyrillic"><div class="controls"><button id="btnP" class="ctrl" aria-label="Промени писмо">Latinica</button><button id="btnJ" class="ctrl" aria-label="Changer de langue">Français</button><button id="btnA" class="ctrl" aria-label="Слушај">🔊 Слушај</button><button id="btnT" class="ctrl" aria-label="Промени тему">🌙</button></div><main id="sadrzaj-sr" class="sadrzaj"><header class="zaglavlje"><div class="datum">среда, 24. јуна 2026.</div><h1>Добро јутро. Дневни преглед вести за данас.</h1></header><section class="sekcija pregled-dana"><h2><span class="ikona">📰</span> Преглед дана</h2><p class="pregled">Данас обележавају три велике теме. Влада Србије представила је пакет мера подршке најстаријима — од повећања најнижих пензија до помоћи за грејање — што је одмах постало главна тема разговора и у домовима и у Скупштини.</p><p class="pregled">У исто време, у економији влада опрезни оптимизам: динар је стабилан, а цене основних намирница нису се значајније мењале, иако грађани и даље пажљиво прате своје трошкове.</p><p class="pregled">Из света стижу важне вести које се тичу и нас, док се у спорту пажња окреће ка репрезентацији и њеним припремама за наредни меч.</p><p class="pregled">У наставку следе детаљни прегледи по темама, са изворима и линковима ако желите да прочитате више.</p></section><section class="sekcija vreme"><h2><span class="ikona">🌤️</span> Време — Београд</h2><div class="vreme-karta"><div class="temp">🌤️ 21°</div><div class="vreme-opis">Претежно ведро • од 13° до 24°</div></div></section><section class="sekcija"><h2><span class="ikona">📰</span> Главне вести</h2><article class="vest"><img class="slika" src="https://picsum.photos/seed/rs-penzije/640/360" alt="" loading="lazy" onerror="this.style.display='none'"><h3>Влада усвојила нове мере подршке пензионерима</h3><p class="rezime">Влада Србије усвојила је пакет мера усмерен на старије суграђане, укључујући повећање најнижих пензија и додатну помоћ за грејање током зиме. Мере ступају на снагу наредног месеца.</p><div class="cinjenice"><span class="oznaka">Најважније</span><ul><li>Повећање најнижих пензија</li><li>Додатак за грејање</li><li>Примена од наредног месеца</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/vest1" target="_blank" rel="noopener">RTS ↗</a><a class="izvor" href="https://example.com/vest1b" target="_blank" rel="noopener">N1 ↗</a></div></article><article class="vest"><img class="slika" src="https://picsum.photos/seed/rs-put/640/360" alt="" loading="lazy" onerror="this.style.display='none'"><h3>Радови на путу Београд–Нови Сад привремено успоравају саобраћај</h3><p class="rezime">Због редовног одржавања, на деоници аутопута очекују се мања успоравања у преподневним сатима. Возачима се саветује стрпљење и поштовање привремене сигнализације.</p><div class="cinjenice"><span class="oznaka">Најважније</span><ul><li>Радови у преподневним сатима</li><li>Могућа успоравања</li><li>Привремена сигнализација</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/vest2" target="_blank" rel="noopener">Danas ↗</a></div></article></section><section class="sekcija"><h2><span class="ikona">🏛️</span> Политика</h2><article class="vest"><h3>Скупштина расправља о буџету за наредну годину</h3><p class="rezime">Народна скупштина започела је расправу о предлогу буџета. Очекује се да заседање потраје неколико дана, уз дискусију о издвајањима за здравство и образовање.</p><div class="cinjenice"><span class="oznaka">Најважније</span><ul><li>Расправа о буџету</li><li>Тежиште на здравству и образовању</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/pol1" target="_blank" rel="noopener">N1 ↗</a><a class="izvor" href="https://example.com/pol1b" target="_blank" rel="noopener">Nova.rs ↗</a></div></article></section><section class="sekcija"><h2><span class="ikona">💰</span> Економија</h2><article class="vest"><h3>Динар стабилан, цене основних намирница без већих промена</h3><p class="rezime">Курс динара остаје стабилан, а цене хлеба, млека и уља нису се значајније мењале у односу на прошлу недељу. Народна банка најављује наставак праћења инфлације.</p><div class="cinjenice"><span class="oznaka">Најважније</span><ul><li>Стабилан курс динара</li><li>Цене намирница стабилне</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/eko1" target="_blank" rel="noopener">Euronews Србија ↗</a></div></article></section><section class="sekcija"><h2><span class="ikona">⚽</span> Спорт</h2><article class="vest"><h3>Репрезентација Србије спрема се за наредну утакмицу</h3><p class="rezime">Фудбалска репрезентација наставила је припреме пред важан меч. Селектор је најавио да су сви играчи спремни и здрави.</p><div class="cinjenice"><span class="oznaka">Најважније</span><ul><li>Сви играчи спремни</li><li>Меч наредне недеље</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/sport1" target="_blank" rel="noopener">N1 Спорт ↗</a></div></article></section><section class="sekcija hitno"><h2><span class="ikona">🚨</span> Хитне информације</h2><article class="vest"><h3>РХМЗ: појачан ветар у поподневним сатима</h3><p class="rezime">Републички хидрометеоролошки завод упозорава на појачан ветар у току поподнева. Препоручује се опрез при шетњи и учвршћивање лаких предмета на терасама.</p><div class="cinjenice"><span class="oznaka">Најважније</span><ul><li>Појачан ветар поподне</li><li>Препоручен опрез</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/hitno1" target="_blank" rel="noopener">RHMZ ↗</a></div></article></section><section class="sekcija izvori-korisceni"><h2>Коришћени извори</h2><div class="izvori"><span class="izvor">Politika</span><span class="izvor">Blic</span><span class="izvor">Večernje novosti</span><span class="izvor">Danas</span><span class="izvor">Kurir</span><span class="izvor">Informer</span><span class="izvor">Alo!</span><span class="izvor">RTS</span><span class="izvor">N1</span><span class="izvor">Nova</span><span class="izvor">Euronews Srbija</span><span class="izvor">B92</span><span class="izvor">Telegraf</span><span class="izvor">Tanjug</span><span class="izvor">Sputnik Srbija</span><span class="izvor">Pančevac</span></div></section><footer class="podnozje"><p>Аутоматски дневни преглед вести • 24.6.26. 10:20</p></footer></main><main id="sadrzaj-fr" class="sadrzaj" hidden><header class="zaglavlje"><div class="datum">mercredi 24 juin 2026</div><h1>Bonjour. Voici l'aperçu de l'actualité du jour.</h1></header><section class="sekcija pregled-dana"><h2><span class="ikona">📰</span> Le tour de l'actualité du jour</h2><p class="pregled">Trois grands thèmes dominent aujourd'hui. Le gouvernement serbe a présenté un ensemble de mesures de soutien aux plus âgés — de la hausse des plus petites retraites à l'aide au chauffage — devenu aussitôt le principal sujet de conversation, à la maison comme à l'Assemblée.</p><p class="pregled">Dans le même temps, l'économie respire un optimisme prudent : le dinar est stable et les prix des produits de base n'ont guère bougé, même si chacun surveille ses dépenses.</p><p class="pregled">Du reste du monde nous parviennent des nouvelles importantes qui nous concernent aussi, tandis que le sport tourne son regard vers la sélection et sa préparation au prochain match.</p><p class="pregled">Suivent des aperçus détaillés par thème, avec les sources et des liens si vous souhaitez en lire davantage.</p></section><section class="sekcija vreme"><h2><span class="ikona">🌤️</span> Météo — Београд</h2><div class="vreme-karta"><div class="temp">🌤️ 21°</div><div class="vreme-opis">Plutôt dégagé • de 13° à 24°</div></div></section><section class="sekcija"><h2><span class="ikona">📰</span> À la une</h2><article class="vest"><img class="slika" src="https://picsum.photos/seed/rs-penzije/640/360" alt="" loading="lazy" onerror="this.style.display='none'"><h3>Le gouvernement adopte de nouvelles mesures de soutien aux retraités</h3><p class="rezime">Le gouvernement serbe a adopté un ensemble de mesures destinées aux personnes âgées, dont une hausse des pensions les plus basses et une aide supplémentaire pour le chauffage en hiver. Les mesures entrent en vigueur le mois prochain.</p><div class="cinjenice"><span class="oznaka">L'essentiel</span><ul><li>Hausse des pensions les plus basses</li><li>Aide au chauffage</li><li>Application le mois prochain</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/vest1" target="_blank" rel="noopener">RTS ↗</a><a class="izvor" href="https://example.com/vest1b" target="_blank" rel="noopener">N1 ↗</a></div></article><article class="vest"><img class="slika" src="https://picsum.photos/seed/rs-put/640/360" alt="" loading="lazy" onerror="this.style.display='none'"><h3>Travaux sur l'autoroute Belgrade–Novi Sad : ralentissements temporaires</h3><p class="rezime">En raison de travaux d'entretien, de légers ralentissements sont attendus le matin sur une portion de l'autoroute. Il est conseillé aux automobilistes d'être patients et de respecter la signalisation temporaire.</p><div class="cinjenice"><span class="oznaka">L'essentiel</span><ul><li>Travaux le matin</li><li>Ralentissements possibles</li><li>Signalisation temporaire</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/vest2" target="_blank" rel="noopener">Danas ↗</a></div></article></section><section class="sekcija"><h2><span class="ikona">🏛️</span> Politique</h2><article class="vest"><h3>L'Assemblée débat du budget de l'année prochaine</h3><p class="rezime">L'Assemblée nationale a entamé le débat sur le projet de budget. La séance devrait durer plusieurs jours, avec des discussions sur les dépenses de santé et d'éducation.</p><div class="cinjenice"><span class="oznaka">L'essentiel</span><ul><li>Débat sur le budget</li><li>Accent sur la santé et l'éducation</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/pol1" target="_blank" rel="noopener">N1 ↗</a><a class="izvor" href="https://example.com/pol1b" target="_blank" rel="noopener">Nova.rs ↗</a></div></article></section><section class="sekcija"><h2><span class="ikona">💰</span> Économie</h2><article class="vest"><h3>Le dinar stable, prix des produits de base quasi inchangés</h3><p class="rezime">Le cours du dinar reste stable et les prix du pain, du lait et de l'huile n'ont pas connu de variation notable par rapport à la semaine dernière. La Banque nationale poursuit son suivi de l'inflation.</p><div class="cinjenice"><span class="oznaka">L'essentiel</span><ul><li>Cours du dinar stable</li><li>Prix des denrées stables</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/eko1" target="_blank" rel="noopener">Euronews Србија ↗</a></div></article></section><section class="sekcija"><h2><span class="ikona">⚽</span> Sport</h2><article class="vest"><h3>La sélection serbe se prépare pour son prochain match</h3><p class="rezime">La sélection de football a poursuivi sa préparation avant un match important. Le sélectionneur a annoncé que tous les joueurs sont prêts et en bonne santé.</p><div class="cinjenice"><span class="oznaka">L'essentiel</span><ul><li>Tous les joueurs prêts</li><li>Match la semaine prochaine</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/sport1" target="_blank" rel="noopener">N1 Спорт ↗</a></div></article></section><section class="sekcija hitno"><h2><span class="ikona">🚨</span> Informations urgentes</h2><article class="vest"><h3>RHMZ : vent renforcé dans l'après-midi</h3><p class="rezime">L'Institut hydrométéorologique met en garde contre un vent renforcé dans l'après-midi. La prudence est recommandée lors des promenades, ainsi que de fixer les objets légers sur les terrasses.</p><div class="cinjenice"><span class="oznaka">L'essentiel</span><ul><li>Vent renforcé l'après-midi</li><li>Prudence recommandée</li></ul></div><div class="izvori"><a class="izvor" href="https://example.com/hitno1" target="_blank" rel="noopener">RHMZ ↗</a></div></article></section><section class="sekcija izvori-korisceni"><h2>Sources utilisées</h2><div class="izvori"><span class="izvor">Politika</span><span class="izvor">Blic</span><span class="izvor">Večernje novosti</span><span class="izvor">Danas</span><span class="izvor">Kurir</span><span class="izvor">Informer</span><span class="izvor">Alo!</span><span class="izvor">RTS</span><span class="izvor">N1</span><span class="izvor">Nova</span><span class="izvor">Euronews Srbija</span><span class="izvor">B92</span><span class="izvor">Telegraf</span><span class="izvor">Tanjug</span><span class="izvor">Sputnik Srbija</span><span class="izvor">Pančevac</span></div></section><footer class="podnozje"><p>Aperçu quotidien de l'actualité • 24.6.26. 10:20</p></footer></main></div><script>
 (function(){
   var M={"а":"a","б":"b","в":"v","г":"g","д":"d","ђ":"đ","е":"e","ж":"ž","з":"z","и":"i","ј":"j","к":"k","л":"l","љ":"lj","м":"m","н":"n","њ":"nj","о":"o","п":"p","р":"r","с":"s","т":"t","ћ":"ć","у":"u","ф":"f","х":"h","ц":"c","ч":"č","џ":"dž","ш":"š","А":"A","Б":"B","В":"V","Г":"G","Д":"D","Ђ":"Đ","Е":"E","Ж":"Ž","З":"Z","И":"I","Ј":"J","К":"K","Л":"L","Љ":"Lj","М":"M","Н":"N","Њ":"Nj","О":"O","П":"P","Р":"R","С":"S","Т":"T","Ћ":"Ć","У":"U","Ф":"F","Х":"H","Ц":"C","Ч":"Č","Џ":"Dž","Ш":"Š"};
   function toLat(s){var o="";for(var i=0;i<s.length;i++){var c=s[i];o+=(M[c]!==undefined?M[c]:c);}return o;}
   function $(id){return document.getElementById(id);}
-  var app=$("app"),sr=$("sadrzaj-sr"),fr=$("sadrzaj-fr");
-  var btnP=$("btnP"),btnJ=$("btnJ"),btnT=$("btnT"),btnA=$("btnA"),btnPDF=$("btnPDF"),btnShare=$("btnShare"),pret=$("pretraga");
-  function walk(node,f){ if(node.nodeType===3){f(node);} else { for(var i=0;i<node.childNodes.length;i++){ walk(node.childNodes[i],f);} } }
+  var app=$("app"),sr=$("sadrzaj-sr"),fr=$("sadrzaj-fr"),btnP=$("btnP"),btnJ=$("btnJ"),btnT=$("btnT"),btnA=$("btnA");
+  function walk(n,f){ if(n.nodeType===3){f(n);} else { for(var i=0;i<n.childNodes.length;i++){ walk(n.childNodes[i],f);} } }
   function toLatin(){ walk(sr,function(n){ if(n.__cyr===undefined)n.__cyr=n.nodeValue; n.nodeValue=toLat(n.__cyr); }); }
   function toCyr(){ walk(sr,function(n){ if(n.__cyr!==undefined)n.nodeValue=n.__cyr; }); }
   var pismo=localStorage.getItem("pismo")||app.getAttribute("data-pismo")||"cyrillic";
   var jezik=localStorage.getItem("jezik")||"sr";
-  function vis(){ return (jezik==="fr"&&fr)?fr:sr; }
-  function labels(){
-    var l=(jezik==="fr")?"fr":"sr";
-    [btnA,btnPDF,btnShare].forEach(function(b){ if(b){var v=b.getAttribute("data-"+l); if(v)b.textContent=v;} });
-    if(pret){ var ph=pret.getAttribute("data-"+l); if(ph)pret.setAttribute("placeholder",ph); }
-  }
+  function visMain(){ return (jezik==="fr"&&fr)?fr:sr; }
   function applyPismo(){ if(pismo==="latin"){toLatin();if(btnP)btnP.textContent="Ћирилица";}else{toCyr();if(btnP)btnP.textContent="Latinica";} localStorage.setItem("pismo",pismo); }
   function applyJezik(){
-    if(jezik==="fr"&&fr){ sr.hidden=true; fr.hidden=false; if(btnP)btnP.style.display="none"; if(btnJ)btnJ.textContent="Српски"; }
-    else { jezik="sr"; sr.hidden=false; if(fr)fr.hidden=true; if(btnP)btnP.style.display=""; if(btnJ)btnJ.textContent="Français"; }
-    localStorage.setItem("jezik",jezik); labels(); doSearch();
+    if(jezik==="fr"&&fr){ sr.hidden=true; fr.hidden=false; if(btnP)btnP.style.display="none"; if(btnJ)btnJ.textContent="Српски"; if(btnA)btnA.textContent="🔊 Écouter"; }
+    else { jezik="sr"; sr.hidden=false; if(fr)fr.hidden=true; if(btnP)btnP.style.display=""; if(btnJ)btnJ.textContent="Français"; if(btnA)btnA.textContent="🔊 Слушај"; }
+    localStorage.setItem("jezik",jezik);
   }
   if(btnP)btnP.addEventListener("click",function(){ pismo=(pismo==="latin")?"cyrillic":"latin"; applyPismo(); });
   if(btnJ)btnJ.addEventListener("click",function(){ jezik=(jezik==="fr")?"sr":"fr"; applyJezik(); });
   var tema=localStorage.getItem("tema")||"light";
   function applyTema(){ app.setAttribute("data-tema",tema); if(btnT)btnT.textContent=(tema==="dark")?"☀️":"🌙"; localStorage.setItem("tema",tema); }
   if(btnT)btnT.addEventListener("click",function(){ tema=(tema==="dark")?"light":"dark"; applyTema(); });
-  // Аудио (читање наглас)
   var speaking=false;
-  function stopAudio(){ if(window.speechSynthesis)window.speechSynthesis.cancel(); speaking=false; labels(); }
+  function stopA(){ if(window.speechSynthesis)window.speechSynthesis.cancel(); speaking=false; if(btnA)btnA.textContent=(jezik==="fr")?"🔊 Écouter":"🔊 Слушај"; }
   if(btnA)btnA.addEventListener("click",function(){
-    if(!("speechSynthesis" in window)){ return; }
-    if(speaking){ stopAudio(); return; }
-    var m=vis(); var text=m?m.innerText:""; if(!text)return;
-    var u=new SpeechSynthesisUtterance(text);
-    u.lang=(jezik==="fr")?"fr-FR":"sr-RS"; u.rate=.95;
-    u.onend=stopAudio; u.onerror=stopAudio;
+    if(!("speechSynthesis" in window))return;
+    if(speaking){ stopA(); return; }
+    var m=visMain(); var text=m?m.innerText:""; if(!text)return;
+    var u=new SpeechSynthesisUtterance(text); u.lang=(jezik==="fr")?"fr-FR":"sr-RS"; u.rate=.95;
+    u.onend=stopA; u.onerror=stopA;
     window.speechSynthesis.cancel(); window.speechSynthesis.speak(u); speaking=true;
     btnA.textContent=(jezik==="fr")?"⏹ Arrêter":"⏹ Заустави";
   });
-  if(btnPDF)btnPDF.addEventListener("click",function(){ window.print(); });
-  if(btnShare)btnShare.addEventListener("click",function(){
-    var url=location.href, title=document.title;
-    if(navigator.share){ navigator.share({title:title,url:url}).catch(function(){}); }
-    else if(navigator.clipboard){ navigator.clipboard.writeText(url); var o=btnShare.textContent; btnShare.textContent="✓"; setTimeout(function(){labels();},1200); }
-  });
-  // Претрага
-  function doSearch(){
-    if(!pret)return; var q=(pret.value||"").toLowerCase().trim(); var m=vis(); if(!m)return;
-    var vesti=m.querySelectorAll(".vest");
-    for(var i=0;i<vesti.length;i++){ vesti[i].style.display=(!q||vesti[i].textContent.toLowerCase().indexOf(q)>=0)?"":"none"; }
-    var secs=m.querySelectorAll(".sekcija");
-    for(var j=0;j<secs.length;j++){ var s=secs[j];
-      if(s.classList.contains("izvori-korisceni")||s.classList.contains("vreme")){ s.style.display=q?"none":""; continue; }
-      var inSec=s.querySelectorAll(".vest"); if(inSec.length===0){ continue; }
-      var any=false; for(var k=0;k<inSec.length;k++){ if(inSec[k].style.display!=="none"){any=true;break;} }
-      s.style.display=any?"":"none";
-    }
-  }
-  if(pret)pret.addEventListener("input",doSearch);
   applyTema(); applyPismo(); applyJezik();
 })();
 </script>

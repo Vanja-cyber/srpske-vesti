@@ -11,7 +11,12 @@ HARD RULES:
 - Order by importance (most important first) within each section.
 - Use ONLY sources and URLs present in the input. NEVER invent facts, sources, or links. If unsure, omit.
 - Be truthful and neutral.
-- STYLE: professional, journalistic register, yet simple and clear for an older reader. Vary the greeting, the intro and your phrasing every day so the digest never reads as a fixed template.
+- STYLE: professional, journalistic register, yet simple and clear for an older reader. Vary the greeting, the overview and your phrasing every day so the digest never reads as a fixed template.
+- LENGTH & RICHNESS — VERY IMPORTANT: this reader LOVES to read, so be generous and thorough, never terse.
+  * "overview": write a LONG tour of the day in flowing Serbian prose — 4 to 6 full paragraphs (separate paragraphs with a blank line). Tell the story of the day's most important developments with context, not just a list.
+  * Each item "summary": 5 to 9 sentences, with real detail and context.
+  * Each item "facts": 3 to 6 concrete key facts.
+  * Include SEVERAL items per section when the news supports it (the page should be long and full of text).
 
 SECTIONS — use these exact id / title / icon, keep this order, include a section ONLY if it has real items:
 glavne-vesti | Главне вести | 📰
@@ -45,6 +50,7 @@ const DIGEST_SCHEMA = {
   type: "object",
   properties: {
     greeting: { type: "string" },
+    overview: { type: "string", description: "Дугачак преглед дана у више пасуса (раздвоји пасусе празним редом)" },
     intro: { type: "string" },
     sections: {
       type: "array",
@@ -60,7 +66,7 @@ const DIGEST_SCHEMA = {
       }
     }
   },
-  required: ["greeting", "intro", "sections"]
+  required: ["greeting", "overview", "sections"]
 };
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -82,7 +88,7 @@ async function callTool({ apiKey, model, maxTokens, system, user, tool }) {
         method: "POST",
         headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
         body,
-        signal: AbortSignal.timeout(300000)
+        signal: AbortSignal.timeout(420000)
       });
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`Anthropic API ${res.status}`);
@@ -122,9 +128,7 @@ export async function summarize(articles, opts = {}) {
     })
     .join("\n\n");
 
-  const lengthRule = ultra
-    ? "LENGTH: ULTRA-ДЕТАЉНО — резимеи од 4-6 реченица, по 4-6 кључних чињеница, буди исцрпан."
-    : "LENGTH: Сажето — резимеи од 2-4 реченице, по 2-4 кључне чињенице.";
+  const lengthRule = "ОБИМ: Пиши ОПШИРНО и детаљно. Дугачак „overview“ дана (4-6 пасуса), резимеи од 5-9 реченица, по 3-6 чињеница, и више вести по секцији. Страница треба да буде дугачка и пуна текста.";
 
   const user =
     `Данашњи датум: ${date}\n${lengthRule}\n\n` +
@@ -132,7 +136,7 @@ export async function summarize(articles, opts = {}) {
     `Позови алат "emit_digest" са дневним прегледом.`;
 
   const digest = await callTool({
-    apiKey, model, maxTokens: ultra ? 16000 : 8000, system: SYSTEM, user,
+    apiKey, model, maxTokens: ultra ? 24000 : 16000, system: SYSTEM, user,
     tool: { name: "emit_digest", description: "Врати структуриран дневни преглед вести.", input_schema: DIGEST_SCHEMA }
   });
   digest.date = date;
@@ -148,10 +152,10 @@ export async function translateToFrench(digest, opts = {}) {
   const system =
     "You translate a Serbian news digest into French by calling the emit_translation tool. " +
     "Keep the SAME structure and the SAME 'id', 'icon', 'sources' and 'links' values. " +
-    "Translate ONLY: greeting, intro, each section 'title', and each item's 'title', 'summary' and 'facts'. " +
-    "Use natural, fluent, simple and professional French for an older reader.";
+    "Translate ONLY: greeting, overview, intro, each section 'title', and each item's 'title', 'summary' and 'facts'. " +
+    "Keep the overview's paragraph breaks. Use natural, fluent, simple and professional French for an older reader.";
 
-  const payload = { greeting: digest.greeting, intro: digest.intro, sections: digest.sections };
+  const payload = { greeting: digest.greeting, overview: digest.overview, intro: digest.intro, sections: digest.sections };
 
   try {
     const fr = await callTool({
