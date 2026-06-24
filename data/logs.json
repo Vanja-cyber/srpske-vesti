@@ -1,5 +1,44 @@
 [
   {
+    "ts": "2026-06-24T07:32:35.339Z",
+    "date": "2026-06-24",
+    "collected": 1216,
+    "dedup": 150,
+    "feedErrors": [],
+    "sections": 0,
+    "items": 0,
+    "send": {
+      "skipped": true,
+      "reason": "--no-send"
+    }
+  },
+  {
+    "ts": "2026-06-24T07:26:46.152Z",
+    "date": "2026-06-24",
+    "collected": 1218,
+    "dedup": 150,
+    "feedErrors": [],
+    "sections": 0,
+    "items": 0,
+    "send": {
+      "skipped": true,
+      "reason": "--no-send"
+    }
+  },
+  {
+    "ts": "2026-06-24T07:17:39.826Z",
+    "date": "2026-06-24",
+    "collected": 0,
+    "dedup": 0,
+    "feedErrors": [],
+    "sections": 0,
+    "items": 0,
+    "send": {
+      "skipped": true,
+      "reason": "--no-send"
+    }
+  },
+  {
     "ts": "2026-06-23T19:45:45.617Z",
     "date": "2026-06-23",
     "collected": 0,

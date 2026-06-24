@@ -4,7 +4,7 @@
   "timezone": "Europe/Belgrade",
   "defaultScript": "cyrillic",
   "lookbackHours": 24,
-  "maxArticles": 150,
+  "maxArticles": 70,
   "model": "claude-sonnet-4-6",
   "ultraModel": "claude-opus-4-8",
   "ultra": false,

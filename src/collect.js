@@ -76,7 +76,7 @@ export async function collect(sources, hours = 24) {
       continue;
     }
     const isGN = /news\.google\.com/.test(s.url);
-    for (const it of r.value.items || []) {
+    for (const it of (r.value.feed && r.value.feed.items) || []) {
       const raw = it.isoDate || it.pubDate || "";
       const ts = raw ? Date.parse(raw) : NaN;
       if (!Number.isNaN(ts) && ts < since) continue;

@@ -14,7 +14,6 @@ const CB_PHONE = process.env.CALLMEBOT_PHONE || "";
 const CB_KEY = process.env.CALLMEBOT_APIKEY || "";
 
 if (!TOKEN) { console.error("✗ Недостаје GH_TOKEN."); process.exit(1); }
-if (!ANTHROPIC) { console.error("✗ Недостаје ANTHROPIC_API_KEY."); process.exit(1); }
 
 const API = "https://api.github.com";
 const H = {
@@ -105,12 +104,17 @@ if (pages.status === 409) { log("• Pages већ укључен"); }
 else if (pages.ok || pages.status === 201) { log("✓ GitHub Pages укључен (/docs)"); }
 else { log(`• Pages: ${pages.status} ${pages.json.message || ""} (можеш ручно: Settings → Pages → main /docs)`); }
 
-// 7) Прво покретање
-const disp = await gh("POST", `/repos/${OWNER}/${REPO}/actions/workflows/daily.yml/dispatches`, { ref: "main" });
-log(disp.status === 204 ? "✓ Прва анализа покренута" : `• Покретање: ${disp.status} ${disp.json.message || ""} (Actions → Run workflow)`);
+// 7) Прво покретање (само ако је Claude кључ постављен)
+if (ANTHROPIC) {
+  const disp = await gh("POST", `/repos/${OWNER}/${REPO}/actions/workflows/daily.yml/dispatches`, { ref: "main" });
+  log(disp.status === 204 ? "✓ Прва анализа покренута" : `• Покретање: ${disp.status} ${disp.json.message || ""} (Actions → Run workflow)`);
+} else {
+  log("• Прескочено прво покретање — недостаје Claude кључ (ANTHROPIC_API_KEY).");
+}
 
 log("\n──────────────────────────────────────");
 log(`🌐 Страница (за пар минута): ${SITE}/`);
 log(`⚙️  Actions:  https://github.com/${OWNER}/${REPO}/actions`);
-log("✅ Готово. Сваког јутра у 09:30 (Београд) шаље се аутоматски.");
+if (ANTHROPIC) log("✅ Готово. Сваког јутра у 09:30 (Београд) шаље се аутоматски.");
+else log("⚠️  Остаје само да додаш Claude кључ (ANTHROPIC_API_KEY) па да крене.");
 log("──────────────────────────────────────");
