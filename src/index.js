@@ -6,7 +6,7 @@ import { dedup } from "./cluster.js";
 import { summarize, translateToFrench } from "./summarize.js";
 import { getWeather } from "./weather.js";
 import { renderDocument, renderArchive } from "./render.js";
-import { notify } from "./notify.js";
+import { notify, ownerAlert } from "./notify.js";
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const args = new Set(process.argv.slice(2));
@@ -14,6 +14,7 @@ const MOCK = args.has("--mock");
 const NOSEND = args.has("--no-send");
 const ULTRA = args.has("--ultra");
 const SENDONLY = args.has("--send-only");
+const FORCE = args.has("--force");
 
 function readJson(p, fb) {
   try { return JSON.parse(fs.readFileSync(p, "utf8")); } catch { return fb; }
@@ -40,26 +41,87 @@ function nowSr() {
   }
 }
 
+// Тренутни минут у дану по београдском времену (за проверу термина).
+function localMinutes() {
+  const p = new Intl.DateTimeFormat("en-GB", { timeZone: TZ, hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+  const h = +(p.find((x) => x.type === "hour").value);
+  const m = +(p.find((x) => x.type === "minute").value);
+  return h * 60 + m;
+}
+
+// За ПЛАНИРАНА (cron) покретања ради само у правом прозору — отпорно на летње/зимско рачунање времена.
+// (Ручна и локална покретања увек раде.)
+function outOfWindow(phase) {
+  if (process.env.GITHUB_EVENT_NAME !== "schedule") return false;
+  const m = localMinutes();
+  if (phase === "prepare") return !(m >= 540 && m <= 585); // 09:00–09:45
+  if (phase === "send") return !(m >= 565 && m <= 625);    // 09:25–10:25
+  return false;
+}
+
+// Јасан упис грешке у data/errors.json (никад тихи неуспех).
+function logError(phase, message, extra = {}) {
+  try {
+    const p = path.join(ROOT, "data", "errors.json");
+    const arr = readJson(p, []);
+    arr.unshift({ ts: new Date().toISOString(), date: dateStr(), phase, message: String(message).slice(0, 600), ...extra });
+    writeJson(p, arr.slice(0, 100));
+  } catch { /* nikad ne ruši zbog logovanja */ }
+}
+
 async function main() {
   const date = dateStr();
   const docsDir = path.join(ROOT, "docs");
   fs.mkdirSync(path.join(docsDir, "arhiva"), { recursive: true });
   fs.mkdirSync(path.join(ROOT, "data"), { recursive: true });
 
-  // Режим „само слање“: учита већ припремљен преглед и пошаље WhatsApp (без анализе).
+  // Режим „само слање“: учита данашњи припремљен преглед и пошаље WhatsApp.
   if (SENDONLY) {
-    const prepared = readJson(path.join(ROOT, "data", `${date}.json`), null);
+    if (outOfWindow("send")) { console.log("⏭  Ван термина за слање — прескачем."); return; }
     const base = (process.env.SITE_BASE_URL || settings.siteBaseUrl || "").replace(/\/+$/, "");
-    const link = base ? `${base}/` : "(SITE_BASE_URL није подешен)";
-    const sendResult = prepared
-      ? await notify(link, { provider: settings.whatsapp && settings.whatsapp.provider, digest: prepared })
-      : { ok: false, error: `нема припремљеног прегледа за ${date}` };
+    const prepared = readJson(path.join(ROOT, "data", `${date}.json`), null);
+    const valid = prepared && Array.isArray(prepared.sections) && prepared.sections.some((s) => (s.items || []).length > 0);
+
+    if (!base) {
+      logError("send", "SITE_BASE_URL није подешен — не шаљем погрешан линк.");
+      console.error("✗ SITE_BASE_URL није подешен — порука НИЈЕ послата.");
+      await ownerAlert(`⚠️ Дневне вести (${date}): SITE_BASE_URL није подешен, порука НИЈЕ послата.`);
+      process.exit(1);
+    }
+    if (!valid) {
+      logError("send", `нема исправног прегледа за ${date} — порука НИЈЕ послата (никад празна порука).`);
+      console.error(`✗ Нема исправног припремљеног прегледа за ${date} — не шаљем празну поруку.`);
+      await ownerAlert(`⚠️ Дневне вести (${date}): преглед није припремљен, порука НИЈЕ послата. Провери кредит/лог.`);
+      process.exit(1);
+    }
+
+    const link = `${base}/`;
+    const sendResult = await notify(link, { provider: settings.whatsapp && settings.whatsapp.provider, digest: prepared });
     const logsPath = path.join(ROOT, "data", "logs.json");
     const logs = readJson(logsPath, []);
-    logs.unshift({ ts: new Date().toISOString(), date, phase: "send", send: sendResult });
+    logs.unshift({ ts: new Date().toISOString(), date, phase: "send", link, send: sendResult });
     writeJson(logsPath, logs.slice(0, 200));
     console.log("WhatsApp (слање):", JSON.stringify(sendResult));
+
+    if (!sendResult.ok && !sendResult.skipped) {
+      logError("send", "слање WhatsApp поруке није успело: " + JSON.stringify(sendResult));
+      await ownerAlert(`⚠️ Дневне вести (${date}): слање поруке НИЈЕ успело. Детаљи у логу.`);
+      process.exit(1);
+    }
+    console.log("✓ Порука послата, линк:", link);
     return;
+  }
+
+  // Планирана припрема — провери термин (DST-безбедно).
+  if (!MOCK && outOfWindow("prepare")) { console.log("⏭  Ван термина за припрему — прескачем."); return; }
+
+  // Кеш/идемпотентност: ако данашњи исправан преглед већ постоји, не троши IA поново.
+  if (!MOCK && !FORCE) {
+    const existing = readJson(path.join(ROOT, "data", `${date}.json`), null);
+    if (existing && Array.isArray(existing.sections) && existing.sections.some((s) => (s.items || []).length > 0)) {
+      console.log(`✓ Преглед за ${date} већ постоји — прескачем генерисање (уштеда трошкова).`);
+      return;
+    }
   }
 
   const meta = { collected: 0, dedup: 0, feedErrors: [] };
@@ -71,15 +133,41 @@ async function main() {
     const { articles, errors } = await collect(sources, settings.lookbackHours || 24);
     meta.collected = articles.length;
     meta.feedErrors = errors;
-    const deduped = dedup(articles).slice(0, settings.maxArticles || 120);
+    if (articles.length === 0) {
+      logError("prepare", "ниједан извор није вратио чланке (мрежа или сви извори недоступни).");
+      console.error("✗ Нема прикупљених чланака — преглед није направљен.");
+      await ownerAlert(`⚠️ Дневне вести (${date}): ниједан извор није доступан, преглед није направљен.`);
+      process.exit(1);
+    }
+    const deduped = dedup(articles).slice(0, settings.maxArticles || 70);
     meta.dedup = deduped.length;
     const ultra = ULTRA || !!settings.ultra;
-    digest = await summarize(deduped, {
-      apiKey: process.env.ANTHROPIC_API_KEY,
-      model: ultra ? settings.ultraModel || "claude-opus-4-8" : settings.model || "claude-sonnet-4-6",
-      ultra,
-      date
-    });
+
+    try {
+      digest = await summarize(deduped, {
+        apiKey: process.env.ANTHROPIC_API_KEY,
+        model: ultra ? settings.ultraModel || "claude-opus-4-8" : settings.model || "claude-sonnet-4-6",
+        ultra, date
+      });
+    } catch (e) {
+      if (e && e.credit) {
+        logError("prepare", "НЕМА КРЕДИТА за Anthropic (Claude) API.", { credit: true });
+        console.error("✗ НЕМА КРЕДИТА за Claude API. Преглед НИЈЕ направљен. Допуни: https://console.anthropic.com/settings/billing");
+        await ownerAlert(`❌ Дневне вести (${date}): нема кредита за Claude API. Преглед НИЈЕ направљен. Допуни: console.anthropic.com/settings/billing`);
+        process.exit(2);
+      }
+      if (e && e.auth) {
+        logError("prepare", "Anthropic API кључ не важи (401/403).", { auth: true });
+        console.error("✗ Claude API кључ не ради. Преглед НИЈЕ направљен.");
+        await ownerAlert(`❌ Дневне вести (${date}): Claude API кључ не ради. Преглед НИЈЕ направљен.`);
+        process.exit(2);
+      }
+      logError("prepare", "генерисање није успело: " + ((e && e.message) || e));
+      console.error("✗ Генерисање није успело:", (e && e.message) || e);
+      await ownerAlert(`⚠️ Дневне вести (${date}): генерисање прегледа није успело. Детаљи у логу.`);
+      process.exit(1);
+    }
+
     // Слике из RSS-а — повежи их са вестима преко линка.
     const imgByLink = new Map();
     for (const a of deduped) {
@@ -94,9 +182,11 @@ async function main() {
       const w = await getWeather(settings.weather.lat, settings.weather.lon);
       if (w) digest.weather = { city: settings.weather.city || "Београд", ...w };
     }
-    // Француски превод (опционо; ако не успе, дугме „Français“ се не приказује).
-    const fr = await translateToFrench(digest, { apiKey: process.env.ANTHROPIC_API_KEY, model: settings.model || "claude-sonnet-4-6" });
-    if (fr) { copyImages(digest.sections, fr.sections); digest.fr = fr; }
+    // Француски превод — опционо (settings.frTranslation) и јефтинији модел (Haiku).
+    if (settings.frTranslation !== false) {
+      const fr = await translateToFrench(digest, { apiKey: process.env.ANTHROPIC_API_KEY, model: settings.translateModel || "claude-haiku-4-5-20251001" });
+      if (fr) { copyImages(digest.sections, fr.sections); digest.fr = fr; }
+    }
   }
 
   const generatedAt = nowSr();
@@ -311,7 +401,10 @@ function mockDigest(date) {
   };
 }
 
-main().catch((e) => {
-  console.error("✗ Грешка:", e && e.message ? e.message : e);
+main().catch(async (e) => {
+  const msg = (e && e.message) ? e.message : String(e);
+  logError("main", "непредвиђена грешка: " + msg);
+  console.error("✗ Грешка:", msg);
+  try { await ownerAlert("⚠️ Дневне вести: непредвиђена грешка — " + msg.slice(0, 150)); } catch { /* ignore */ }
   process.exit(1);
 });

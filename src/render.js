@@ -207,26 +207,26 @@ const SCRIPT = `
   var M={"а":"a","б":"b","в":"v","г":"g","д":"d","ђ":"đ","е":"e","ж":"ž","з":"z","и":"i","ј":"j","к":"k","л":"l","љ":"lj","м":"m","н":"n","њ":"nj","о":"o","п":"p","р":"r","с":"s","т":"t","ћ":"ć","у":"u","ф":"f","х":"h","ц":"c","ч":"č","џ":"dž","ш":"š","А":"A","Б":"B","В":"V","Г":"G","Д":"D","Ђ":"Đ","Е":"E","Ж":"Ž","З":"Z","И":"I","Ј":"J","К":"K","Л":"L","Љ":"Lj","М":"M","Н":"N","Њ":"Nj","О":"O","П":"P","Р":"R","С":"S","Т":"T","Ћ":"Ć","У":"U","Ф":"F","Х":"H","Ц":"C","Ч":"Č","Џ":"Dž","Ш":"Š"};
   function toLat(s){var o="";for(var i=0;i<s.length;i++){var c=s[i];o+=(M[c]!==undefined?M[c]:c);}return o;}
   function $(id){return document.getElementById(id);}
-  var app=$("app"),sr=$("sadrzaj-sr"),fr=$("sadrzaj-fr"),btnP=$("btnP"),btnJ=$("btnJ"),btnT=$("btnT"),btnA=$("btnA");
+  var app=$("app"),sr=$("sadrzaj-sr"),fr=$("sadrzaj-fr"),btnP=$("btnP"),btnJ=$("btnJ"),btnT=$("btnT"),btnA=$("btnA"),btnStop=$("btnStop");
   function walk(n,f){ if(n.nodeType===3){f(n);} else { for(var i=0;i<n.childNodes.length;i++){ walk(n.childNodes[i],f);} } }
   function toLatin(){ walk(sr,function(n){ if(n.__cyr===undefined)n.__cyr=n.nodeValue; n.nodeValue=toLat(n.__cyr); }); }
   function toCyr(){ walk(sr,function(n){ if(n.__cyr!==undefined)n.nodeValue=n.__cyr; }); }
   var pismo=localStorage.getItem("pismo")||app.getAttribute("data-pismo")||"cyrillic";
   var jezik=localStorage.getItem("jezik")||"sr";
   function visMain(){ return (jezik==="fr"&&fr)?fr:sr; }
-  function applyPismo(){ if(pismo==="latin"){toLatin();if(btnP)btnP.textContent="Ћирилица";}else{toCyr();if(btnP)btnP.textContent="Latinica";} localStorage.setItem("pismo",pismo); }
+  function applyPismo(){ if(pismo==="latin"){toLatin();if(btnP)btnP.textContent="Ћирилица";}else{toCyr();if(btnP)btnP.textContent="Latinica";} localStorage.setItem("pismo",pismo); if(typeof stopAudio==="function")stopAudio(); }
   function applyJezik(){
-    if(jezik==="fr"&&fr){ sr.hidden=true; fr.hidden=false; if(btnP)btnP.style.display="none"; if(btnJ)btnJ.textContent="Српски"; if(btnA)btnA.textContent="🔊 Écouter"; }
-    else { jezik="sr"; sr.hidden=false; if(fr)fr.hidden=true; if(btnP)btnP.style.display=""; if(btnJ)btnJ.textContent="Français"; if(btnA)btnA.textContent="🔊 Слушај"; }
+    if(jezik==="fr"&&fr){ sr.hidden=true; fr.hidden=false; if(btnP)btnP.style.display="none"; if(btnJ)btnJ.textContent="Српски"; }
+    else { jezik="sr"; sr.hidden=false; if(fr)fr.hidden=true; if(btnP)btnP.style.display=""; if(btnJ)btnJ.textContent="Français"; }
     localStorage.setItem("jezik",jezik);
+    if(typeof stopAudio==="function")stopAudio();
   }
   if(btnP)btnP.addEventListener("click",function(){ pismo=(pismo==="latin")?"cyrillic":"latin"; applyPismo(); });
   if(btnJ)btnJ.addEventListener("click",function(){ jezik=(jezik==="fr")?"sr":"fr"; applyJezik(); });
   var tema=localStorage.getItem("tema")||"light";
   function applyTema(){ app.setAttribute("data-tema",tema); if(btnT)btnT.textContent=(tema==="dark")?"☀️":"🌙"; localStorage.setItem("tema",tema); }
   if(btnT)btnT.addEventListener("click",function(){ tema=(tema==="dark")?"light":"dark"; applyTema(); });
-  var speaking=false;
-  function resetA(){ speaking=false; if(btnA)btnA.textContent=(jezik==="fr")?"🔊 Écouter":"🔊 Слушај"; }
+  var audioState="idle"; // idle | playing | paused
   function pickVoice(lang){
     var vs=(window.speechSynthesis.getVoices()||[]);
     if(lang.indexOf("fr")===0) return vs.filter(function(v){return /^fr/i.test(v.lang);})[0]||null;
@@ -234,31 +234,45 @@ const SCRIPT = `
         || vs.filter(function(v){return /^(hr|bs|sl)/i.test(v.lang);})[0]
         || vs.filter(function(v){return /^(ru|mk|cs|pl)/i.test(v.lang);})[0] || null;
   }
-  function speakNow(text,lang){
+  function setAudioUI(){
+    if(btnA){
+      if(audioState==="playing") btnA.textContent=(jezik==="fr")?"⏸ Pause":"⏸ Пауза";
+      else if(audioState==="paused") btnA.textContent=(jezik==="fr")?"▶ Reprendre":"▶ Настави";
+      else btnA.textContent=(jezik==="fr")?"🔊 Écouter":"🔊 Слушај";
+    }
+    if(btnStop) btnStop.style.display=(audioState==="idle")?"none":"";
+  }
+  function startSpeak(text,lang){
     var voice=pickVoice(lang);
     var sents=text.match(/[^.!?]+[.!?]+|[^.!?]+$/g)||[text];
     var parts=[],cur="";
     sents.forEach(function(s){ if((cur+s).length>220){ if(cur.trim())parts.push(cur); cur=s; } else { cur+=s; } });
     if(cur.trim())parts.push(cur);
     window.speechSynthesis.cancel();
-    speaking=true; if(btnA)btnA.textContent=(jezik==="fr")?"⏹ Arrêter":"⏹ Заустави";
     parts.forEach(function(p,i){
       var u=new SpeechSynthesisUtterance(p.trim());
       u.lang=lang; if(voice)u.voice=voice; u.rate=.92;
-      if(i===parts.length-1)u.onend=resetA;
-      u.onerror=resetA;
+      if(i===parts.length-1)u.onend=function(){ audioState="idle"; setAudioUI(); };
+      u.onerror=function(){ audioState="idle"; setAudioUI(); };
       window.speechSynthesis.speak(u);
     });
+    audioState="playing"; setAudioUI();
   }
-  if(btnA)btnA.addEventListener("click",function(){
-    if(!("speechSynthesis" in window)){ alert("Читање наглас није подржано на овом уређају."); return; }
-    if(speaking){ window.speechSynthesis.cancel(); resetA(); return; }
+  function beginAudio(){
     var m=visMain(); if(!m)return; var raw=m.innerText||""; if(!raw)return;
     var lang=(jezik==="fr")?"fr-FR":"sr-RS";
-    var text=(jezik==="fr")?raw:toLat(raw); // српски: читај латиницу (боља изговор)
-    if(((window.speechSynthesis.getVoices()||[]).length)===0){ window.speechSynthesis.getVoices(); setTimeout(function(){ speakNow(text,lang); },350); }
-    else { speakNow(text,lang); }
+    var text=(jezik==="fr")?raw:toLat(raw); // српски: читај латиницу (бољи изговор)
+    if(((window.speechSynthesis.getVoices()||[]).length)===0){ window.speechSynthesis.getVoices(); setTimeout(function(){ startSpeak(text,lang); },350); }
+    else { startSpeak(text,lang); }
+  }
+  function stopAudio(){ if(window.speechSynthesis)window.speechSynthesis.cancel(); audioState="idle"; setAudioUI(); }
+  if(btnA)btnA.addEventListener("click",function(){
+    if(!("speechSynthesis" in window)){ alert("Читање наглас није подржано на овом уређају."); return; }
+    if(audioState==="idle"){ beginAudio(); }
+    else if(audioState==="playing"){ window.speechSynthesis.pause(); audioState="paused"; setAudioUI(); }
+    else { window.speechSynthesis.resume(); audioState="playing"; setAudioUI(); }
   });
+  if(btnStop)btnStop.addEventListener("click",stopAudio);
   applyTema(); applyPismo(); applyJezik();
 })();
 `;
@@ -276,6 +290,7 @@ export function renderFragment(digest, opts = {}) {
     `<button id="btnP" class="ctrl" aria-label="Промени писмо">Latinica</button>` +
     (hasFr ? `<button id="btnJ" class="ctrl" aria-label="Changer de langue">Français</button>` : "") +
     `<button id="btnA" class="ctrl" aria-label="Слушај">🔊 Слушај</button>` +
+    `<button id="btnStop" class="ctrl" aria-label="Заустави" style="display:none">⏹</button>` +
     `<button id="btnT" class="ctrl" aria-label="Промени тему">🌙</button>` +
     `</div>` +
     `<main id="sadrzaj-sr" class="sadrzaj">${srBody}</main>` +

@@ -98,7 +98,10 @@ async function callTool({ apiKey, model, maxTokens, system, user, tool }) {
       }
       if (!res.ok) {
         const t = await res.text();
-        throw new Error(`Anthropic API ${res.status}: ${t.slice(0, 300)}`);
+        const err = new Error(`Anthropic API ${res.status}: ${t.slice(0, 300)}`);
+        if (res.status === 400 && /credit balance is too low|insufficient|billing|purchase credits/i.test(t)) err.credit = true;
+        if (res.status === 401 || res.status === 403) err.auth = true;
+        throw err; // 4xx (кредит/кључ) — не понављамо, одмах пријави
       }
       const data = await res.json();
       if (process.env.LLM_DEBUG) console.error(`[llm] ${tool.name} stop=${data.stop_reason} out=${data.usage && data.usage.output_tokens}`);
@@ -159,7 +162,7 @@ export async function translateToFrench(digest, opts = {}) {
 
   try {
     const fr = await callTool({
-      apiKey, model, maxTokens: 8000, system,
+      apiKey, model, maxTokens: 16000, system,
       user: "Translate this digest to French via emit_translation:\n" + JSON.stringify(payload),
       tool: { name: "emit_translation", description: "Return the French translation of the digest.", input_schema: DIGEST_SCHEMA }
     });

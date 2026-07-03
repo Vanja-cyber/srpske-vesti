@@ -7,7 +7,10 @@
   "maxArticles": 70,
   "model": "claude-sonnet-4-6",
   "ultraModel": "claude-opus-4-8",
+  "translateModel": "claude-haiku-4-5-20251001",
+  "frTranslation": true,
   "ultra": false,
+  "prepareHourLocal": "09:10",
   "weather": { "enabled": true, "lat": 44.7866, "lon": 20.4489, "city": "Београд" },
   "whatsapp": { "provider": "callmebot" },
   "siteBaseUrl": ""

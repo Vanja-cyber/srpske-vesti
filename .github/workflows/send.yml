@@ -2,8 +2,9 @@ name: Слање прегледа (09:30)
 
 on:
   schedule:
-    # 07:30 UTC = 09:30 у Београду (лето, CEST). Зими: 08:30 UTC.
-    - cron: "30 7 * * *"
+    # Оба термина (лето/зима); index.js шаље само у правом прозору (09:25–10:25 по Београду).
+    - cron: "30 7 * * *"   # лето: 09:30
+    - cron: "30 8 * * *"   # зима: 09:30
   workflow_dispatch: {}
 
 permissions:
@@ -29,4 +30,6 @@ jobs:
           WHATSAPP_PROVIDER: ${{ vars.WHATSAPP_PROVIDER }}
           CALLMEBOT_PHONE: ${{ secrets.CALLMEBOT_PHONE }}
           CALLMEBOT_APIKEY: ${{ secrets.CALLMEBOT_APIKEY }}
+          OWNER_PHONE: ${{ secrets.OWNER_PHONE }}
+          OWNER_APIKEY: ${{ secrets.OWNER_APIKEY }}
         run: node src/index.js --send-only

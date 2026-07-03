@@ -6,7 +6,7 @@ export async function getWeather(lat = 44.7866, lon = 20.4489) {
       `&current=temperature_2m,weather_code` +
       `&daily=temperature_2m_max,temperature_2m_min,weather_code` +
       `&timezone=Europe%2FBelgrade&forecast_days=1`;
-    const r = await fetch(url);
+    const r = await fetch(url, { signal: AbortSignal.timeout(15000) });
     if (!r.ok) return null;
     const d = await r.json();
     return { current: d.current || {}, daily: d.daily || {} };
