@@ -168,6 +168,15 @@ async function main() {
       process.exit(1);
     }
 
+    // Заштита од пресеченог одговора: не пиши празну страницу.
+    const hasContent = digest && Array.isArray(digest.sections) && digest.sections.some((s) => (s.items || []).length > 0);
+    if (!hasContent) {
+      logError("prepare", "модел вратио преглед без секција (вероватно пресечен) — не пишем празну страницу.");
+      console.error("✗ Преглед без садржаја (пресечен) — прескачем упис.");
+      await ownerAlert(`⚠️ Дневне вести (${date}): преглед је пресечен/празан, страница НИЈЕ ажурирана.`);
+      process.exit(1);
+    }
+
     // Слике из RSS-а — повежи их са вестима преко линка.
     const imgByLink = new Map();
     for (const a of deduped) {

@@ -12,11 +12,12 @@ HARD RULES:
 - Use ONLY sources and URLs present in the input. NEVER invent facts, sources, or links. If unsure, omit.
 - Be truthful and neutral.
 - STYLE: professional, journalistic register, yet simple and clear for an older reader. Vary the greeting, the overview and your phrasing every day so the digest never reads as a fixed template.
-- LENGTH & RICHNESS — VERY IMPORTANT: this reader LOVES to read, so be generous and thorough, never terse.
-  * "overview": write a LONG tour of the day in flowing Serbian prose — 4 to 6 full paragraphs (separate paragraphs with a blank line). Tell the story of the day's most important developments with context, not just a list.
-  * Each item "summary": 5 to 9 sentences, with real detail and context.
-  * Each item "facts": 3 to 6 concrete key facts.
-  * Include SEVERAL items per section when the news supports it (the page should be long and full of text).
+- LENGTH & RICHNESS — this reader loves to read, so be generous, BUT the WHOLE digest must fit in one response and be fully complete (never cut off).
+  * "overview": 3 to 4 full paragraphs of flowing Serbian prose (separate paragraphs with a blank line), telling the story of the day with context.
+  * Each item "summary": 3 to 5 sentences with real detail.
+  * Each item "facts": 2 to 4 concrete key facts.
+  * Items per section: up to 4 in "glavne-vesti", up to 2–3 in the others. Skip sections with no real news.
+  * CRITICAL: always FINISH the entire digest. If space runs short, make later summaries a bit shorter rather than leaving the JSON incomplete.
 
 SECTIONS — use these exact id / title / icon, keep this order, include a section ONLY if it has real items:
 glavne-vesti | Главне вести | 📰
@@ -88,7 +89,7 @@ async function callTool({ apiKey, model, maxTokens, system, user, tool }) {
         method: "POST",
         headers: { "x-api-key": apiKey, "anthropic-version": "2023-06-01", "content-type": "application/json" },
         body,
-        signal: AbortSignal.timeout(420000)
+        signal: AbortSignal.timeout(360000)
       });
       if (res.status === 429 || res.status >= 500) {
         lastErr = new Error(`Anthropic API ${res.status}`);
@@ -110,7 +111,8 @@ async function callTool({ apiKey, model, maxTokens, system, user, tool }) {
       return block.input;
     } catch (e) {
       lastErr = e;
-      const transient = /fetch failed|terminated|timeout|aborted|ECONN|ETIMEDOUT|network/i.test(String(e && e.message));
+      // Не понављамо на нашем сопственом timeout/abort (ре-генерисање би само поново пукло и трошило кредит).
+      const transient = /fetch failed|terminated|ECONN|ETIMEDOUT|socket hang|network/i.test(String(e && e.message));
       if (process.env.LLM_DEBUG) console.error(`[llm] ${tool.name} attempt ${attempt} error: ${e && e.message}`);
       if (attempt < 4 && transient) { await sleep(2000 * attempt); continue; }
       throw e;
@@ -131,7 +133,7 @@ export async function summarize(articles, opts = {}) {
     })
     .join("\n\n");
 
-  const lengthRule = "ОБИМ: Пиши ОПШИРНО и детаљно. Дугачак „overview“ дана (4-6 пасуса), резимеи од 5-9 реченица, по 3-6 чињеница, и више вести по секцији. Страница треба да буде дугачка и пуна текста.";
+  const lengthRule = "ОБИМ: Богат али ЦЕЛОВИТ преглед (мора да стане у један одговор и да буде завршен). Overview 3-4 пасуса; резимеи 3-5 реченица; 2-4 чињенице; до 4 вести у главним вестима и 2-3 у осталим секцијама. ОБАВЕЗНО заврши цео JSON — никад пресечен.";
 
   const user =
     `Данашњи датум: ${date}\n${lengthRule}\n\n` +
@@ -139,7 +141,7 @@ export async function summarize(articles, opts = {}) {
     `Позови алат "emit_digest" са дневним прегледом.`;
 
   const digest = await callTool({
-    apiKey, model, maxTokens: ultra ? 24000 : 16000, system: SYSTEM, user,
+    apiKey, model, maxTokens: ultra ? 16000 : 12000, system: SYSTEM, user,
     tool: { name: "emit_digest", description: "Врати структуриран дневни преглед вести.", input_schema: DIGEST_SCHEMA }
   });
   digest.date = date;
@@ -162,7 +164,7 @@ export async function translateToFrench(digest, opts = {}) {
 
   try {
     const fr = await callTool({
-      apiKey, model, maxTokens: 16000, system,
+      apiKey, model, maxTokens: 10000, system,
       user: "Translate this digest to French via emit_translation:\n" + JSON.stringify(payload),
       tool: { name: "emit_translation", description: "Return the French translation of the digest.", input_schema: DIGEST_SCHEMA }
     });
